@@ -1,8 +1,13 @@
 const { chromium } = require('playwright');
 (async () => {
-  const exe = require('fs').readdirSync('/opt/pw-browsers').find(d=>d.startsWith('chromium_headless_shell'));
-  const sub = require('fs').readdirSync('/opt/pw-browsers/'+exe).find(d=>d.startsWith('chrome'));
-  const b = await chromium.launch({executablePath:`/opt/pw-browsers/${exe}/${sub}/headless_shell`});
+  // 기본: npx playwright install chromium 으로 받은 브라우저. 미리 설치된 경로(/opt/pw-browsers)가 있으면 그것을 씀
+  const fs = require('fs'); let opts = {};
+  if (fs.existsSync('/opt/pw-browsers')) {
+    const exe = fs.readdirSync('/opt/pw-browsers').find(d=>d.startsWith('chromium_headless_shell'));
+    const sub = exe && fs.readdirSync('/opt/pw-browsers/'+exe).find(d=>d.startsWith('chrome'));
+    if (sub) opts = {executablePath:`/opt/pw-browsers/${exe}/${sub}/headless_shell`};
+  }
+  const b = await chromium.launch(opts);
   const p = await b.newPage();
   const errs=[]; p.on('pageerror',e=>errs.push(e.message)); p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
   await p.goto('file://'+process.argv[2], {waitUntil:'load'});

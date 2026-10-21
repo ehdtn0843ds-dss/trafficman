@@ -320,7 +320,7 @@ def fig6():
     ax.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1.0, decimals=0))
     ax.set_xlabel("관측 PCTR (대중교통 ÷ 승용차 평균 출근시간, 2020)")
     ax.set_ylabel("승용차 통근 분담률")
-    ax.text(0.02, 0.96, f"경기 31개 시군, r = {r:.2f}\n로짓 적합: logit(s) = −1.05 + 3.20·ln(PCTR)", transform=ax.transAxes,
+    ax.text(0.02, 0.96, f"경기 31개 시군, 상관계수 {r:.2f}\n로짓 적합: logit(s) = −1.05 + 3.20·ln(PCTR)", transform=ax.transAxes,
             va="top", fontsize=7, color=INK2)
     grid(ax, "both")
     save(fig, "fig6_census_logit.png")

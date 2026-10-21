@@ -19,7 +19,7 @@
 | ③ 수단 선택 | 인구총조사 2020 31개 시군: logit(승용차 분담률) = α + β·ln PCTR, 통근자 가중 회귀로 β = 3.20 | `pctr_commute/fit_beta.py`, `axis_model.py` |
 | ④ 진단 | 보류 / 수요관리(PCTR < 1.5) / DRT 연계(도보 ≥ 20분 또는 30%) / 출퇴근 직행 | `axis_model.py` |
 | ⑤ 탄소 손익분기 | 도로 부하식 + 윌런스 선 연료 모델, N* = (C₀ + r·C_dh)/(φ·c_car − c_pax) | `pctr_commute/breakeven.py` |
-| ⑥ 증편 배분 | 수요 D = κ·Q·[(P_old − P_new)⁺ + θ(1 − P_old)], 현행 편하G 실적으로 κ·B 보정, 출근 50회 그리디 배분, 민감도 11개 입력 | `axis_model.py`, `sensitivity.py` |
+| ⑥ 증편 배분 | 수요 D = κ·Q·[(P_old − P_new)⁺ + θ(1 − P_old)], 현행 편하G 실적으로 κ·B 보정, 출근 50회 그리디 배분, 민감도 14개 입력(일변량) + 비관 조합 1개 | `axis_model.py`, `sensitivity.py` |
 
 차량은 현대자동차 공식 제원(2026 카탈로그·가격표)을 기준으로 했다: 유니버스 디젤 44석(직행, 편하G 허용 좌석형 최대), 유니버스 수소전기버스 45인승(무공해 대안), 쏠라티 13인승(DRT, 똑버스 운영 사양), 쏘나타 2.0(승용차). 현대는 유니버스 디젤과 쏠라티의 공인연비·공차중량을 공개하지 않아 국내 실측·보고값으로 대신했다(보고서 표1, `sources/` 참고).
 
@@ -31,7 +31,7 @@ cd pctr_commute
 python3 fit_beta.py        # β = 3.204 재현
 python3 breakeven.py --out be_result4   # 차량 보정 효율·손익분기 표
 python3 axis_model.py      # 진단·배분 → result/allocation.json, result/axes_classified.csv
-python3 sensitivity.py     # 민감도 → result/sensitivity.json
+python3 sensitivity.py     # 민감도 → result/sensitivity.json, 비관 조합 → result/sensitivity_combo.json
 cd ../report
 python3 make_figs.py       # 그림 1~6 (그림1은 vuski/admdongkor의 HangJeongDong_ver20260701.geojson을 data/에 두어야 하며, 없으면 건너뜀)
 npm i playwright && npx playwright install chromium

@@ -39,4 +39,10 @@ for p, vals in GRID.items():
         x = rows[-1]
         print(f"{p:13s} {v:>5} | 우리 {x['ours_t']:>7} t · 전환 {x['ours_shift']:>5} | 현행 {x['base_t']:>7} t · 전환 {x['base_shift']:>4} | κ {x['kappa']} 가산 {x['bonus']}분 | {len(x['axes'])}축")
 json.dump(rows, open(m.ROOT / "result/sensitivity.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+# 비관 조합: φ 상한 0.26 + 탑승률 70% + 재차인원 1.3 + 평택→화성 축 길이 ×0.7
+combo = dict(PHI_MAX=0.26, LOAD=0.7, CAR_OCC=1.3, PT_KM_SCALE=0.7)
+rc = run(**combo)
+out = dict(inputs=combo, ours_t=round(rc["ours"]["t_year"], 1), base_t=round(rc["base"]["t_year"], 1), alloc_ours=rc["alloc_ours"])
+json.dump(out, open(m.ROOT / "result/sensitivity_combo.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+print("비관 조합", out)
 run()

@@ -34,7 +34,8 @@ for rid, e in eg.items():
 json.dump(out, open(PC / "pctr/easygbus_lookup.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("주거지 쌍", len(od), "현행 노선", len(out))
 # ODsay 교차검증
-ods = json.load(open(A / "odsay_api.json", encoding="utf-8"))["transit"]
+# odsay_api.json: {"transit": {key: {"ride": 총 소요(분), ...}}} — ODsay 응답 요약이라 저장소에는 없음(있을 때만 검증)
+ods = json.load(open(A / "odsay_api.json", encoding="utf-8"))["transit"] if (A / "odsay_api.json").exists() else {}
 import numpy as np
 pairs = [(ods[k]["ride"], float(man[k]["tt"])) for k in ods if k in man]
 if pairs:
