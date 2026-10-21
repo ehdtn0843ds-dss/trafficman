@@ -1,11 +1,28 @@
-# 버스를 어디에 넣어야 승용차가 줄어들까?
+<p align="center"><img src="docs/assets/banner.png" alt="버스를 어디에 넣어야 승용차가 줄어들까? 대중교통·승용차 통행시간 비(PCTR)와 탄소 손익분기로 만든 경기도 출퇴근 버스 배치 기준" width="100%"></p>
 
-**대중교통·승용차 통행시간 비(PCTR)와 탄소 손익분기로 만든 경기도 출퇴근 버스 배치 기준**
+<p align="center">
+  <a href="https://ehdtn0843ds-dss.github.io/trafficman/"><b>인터랙티브 소개 페이지</b></a>
+  &nbsp;|&nbsp;
+  <a href="report/버스타G_분석보고서.pdf"><b>분석보고서 PDF</b></a>
+  &nbsp;|&nbsp;
+  <a href="docs/REPRODUCE.md">재현 가이드</a>
+</p>
 
-숲과나눔 × 한겨레 「AI와 함께하는 교통문제 해결을 위한 데이터 분석 공모전」 출품작 · 팀 **버스타G**
+<p align="center">
+  <img alt="공모전" src="https://img.shields.io/badge/숲과나눔×한겨레-AI_교통_데이터_분석_공모전-1E2830">
+  <img alt="팀" src="https://img.shields.io/badge/팀-버스타G-EB6834">
+  <img alt="Python" src="https://img.shields.io/badge/Python-pandas%20·%20numpy%20·%20matplotlib-2A78D6">
+</p>
 
-> 분석보고서 원본: [`report/버스타G_분석보고서.pdf`](report/버스타G_분석보고서.pdf)
-> 이 페이지는 보고서 내용을 그림과 함께 읽기 쉽게 풀어 쓴 요약이에요. 코드를 직접 돌려 보려면 [재현 가이드](docs/REPRODUCE.md)를 보면 돼요.
+<table align="center">
+<tr>
+<td align="center" width="33%"><h3>약 11명</h3>버스 1회가 탄소를 줄이는<br>회당 승용차 출신 승객 수</td>
+<td align="center" width="33%"><h3>61%</h3>PCTR 기준으로 배분했을 때<br>순감축일 확률</td>
+<td align="center" width="33%"><h3>86%</h3>현행 방식으로 배분했을 때<br>순증가일 확률</td>
+</tr>
+</table>
+
+숲과나눔 × 한겨레 「AI와 함께하는 교통문제 해결을 위한 데이터 분석 공모전」 출품작이에요. 이 페이지는 보고서 내용을 그림과 함께 읽기 쉽게 풀어 쓴 요약이고, 좌석 배치도로 손익분기를 직접 움직여 볼 수 있는 [소개 페이지](https://ehdtn0843ds-dss.github.io/trafficman/)도 있어요.
 
 ---
 
@@ -79,6 +96,7 @@ PCTR이 1보다 작으면 대중교통이 더 빠르고, 2라면 대중교통이
 재미있는 건 DRT 연계로 진단된 축에서도, 역까지 데려다주는 DRT(똑버스)가 승용차를 끌어오지 못했다는 점이에요. 똑버스 평균 대기(14분)가 걷는 시간을 줄여 얻는 이득보다 길었거든요. 그래서 이런 축에도 **아파트 단지 안에 정차하는 직행버스**를 권해요.
 
 <p align="center"><img src="report/figs/fig3_matrix.png" width="560"></p>
+<p align="center"><sub>PCTR × 승용차 통근자로 본 분류. 테두리 원이 증편을 배분한 축이에요.</sub></p>
 
 ### 4. 기준은 "회당 승용차 출신 승객 약 11명"이에요
 
@@ -89,6 +107,7 @@ PCTR이 1보다 작으면 대중교통이 더 빠르고, 2라면 대중교통이
 - 현행 편하G 수준(회당 약 19.5명, φ 0.25)이면 승용차 출신은 약 5명이라 기준에 못 미쳐요.
 
 <p align="center"><img src="report/figs/fig4_breakeven.png" width="600"></p>
+<p align="center"><sub>유니버스 디젤 44석 1회의 탄소 손익분기. 수소버스는 φ 0.25에서 23.3명이면 넘어요.</sub></p>
 
 ### 5. 같은 100회를 어디에 넣느냐에 따라 결과가 갈려요
 
@@ -118,6 +137,7 @@ PCTR이 1보다 작으면 대중교통이 더 빠르고, 2라면 대중교통이
 - 탑승·φ·연비·회송·재차인원을 근거 범위 안에서 동시에 뽑아 2만 번 계산했더니 PCTR 기준이 순감축일 확률은 **61%**(중앙값 연 124 t), 현행 방식이 순증가일 확률은 **86%**(중앙값 −388 t)였어요.
 
 <p align="center"><img src="report/figs/fig7_hypothesis.png" width="720"></p>
+<p align="center"><sub>(a) 현행 노선과 버스 후보 축의 φ 참고값. (b) 2만 회 계산의 연간 순감축 분포.</sub></p>
 
 ### 덤: 원래 대중교통 타던 분들에게도 좋아요
 
@@ -174,4 +194,4 @@ Anthropic Claude(Claude 앱의 에이전트 작업)를 썼어요. 문제의식, 
 | [`resid/`](resid/) | 주거지 대표점과 통행시간 측정값 |
 | [`apimeasure/`](apimeasure/) | 측정 좌표와 입력 생성 스크립트 |
 | [`sources/`](sources/) | 입력값 근거 조사 기록 |
-| [`docs/REPRODUCE.md`](docs/REPRODUCE.md) | 수치를 처음부터 다시 계산하는 방법 |
+| [`docs/`](docs/) | 소개 페이지(index.html)와 [재현 가이드](docs/REPRODUCE.md) |
