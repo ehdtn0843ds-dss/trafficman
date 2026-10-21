@@ -52,3 +52,12 @@ data/           국민연금 직장·거주지 이동 데이터(2025-12), KOSIS 
 sources/        입력값 근거 조사 기록(차량 제원, 수요·운영 파라미터)
 ```
 
+
+## 소개 페이지 (docs/)
+
+GitHub Pages용 정적 페이지다. 빌드 과정 없이 docs/를 그대로 서빙한다.
+
+- `docs/data/build_model_json.py`: 모델 결과를 `docs/data/model.json`으로 내보낸다(axis_model·breakeven을 import, 기준 배분이 allocation.json과 같은지 assert).
+- `docs/data/build_sgg_outline.py`: vuski/admdongkor 행정동 경계(ver20260701)를 시군·자치구 단위로 합치고 단순화해 `docs/data/sgg_outline.json`을 만든다(shapely 필요).
+- `docs/js/model.js`: 손익분기·연간 순감축·배분·몬테카를로를 브라우저에서 계산하는 모듈. `node docs/js/model.test.mjs`로 보고서 수치 재현을 검증한다.
+- 로컬 미리보기: `python3 -m http.server -d docs` 후 http://localhost:8000 (ES 모듈이라 file://로는 동작하지 않는다).

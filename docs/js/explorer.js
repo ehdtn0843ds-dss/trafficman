@@ -1,10 +1,12 @@
 // 축 탐색기: 20개 통근 축 + 현행 편하G 28개 노선
 // 좌표는 model.json(출발 행정동 5곳 인구가중 대표점, 목적지 대표점, 편하G 정류장)을 단순 등장방형 투영으로 그려요.
-// 경기도 윤곽은 저장소에 없어서 그리지 않아요. 계산은 js/model.js의 annualNet·breakeven.
+// 배경 시군 경계는 data/sgg_outline.json(vuski/admdongkor 행정동 경계를 시군 단위로 합쳐 단순화, build_sgg_outline.py).
+// 경계 파일을 못 받으면 경계 없이 그려요. 계산은 js/model.js의 annualNet·breakeven.
 import { loadModel, getModel, annualNet, breakeven } from './model.js';
 
 const root = document.getElementById('explorer-root');
 const MODEL_URL = new URL('../data/model.json', import.meta.url).href;
+const OUTLINE_URL = new URL('../data/sgg_outline.json', import.meta.url).href;
 const MINUS = '−';
 const sgn = (v, d = 0) => {
   const r = +v.toFixed(d);
@@ -14,16 +16,19 @@ const int = (v) => Math.round(v).toLocaleString('ko-KR');
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const city = (s) => s.replace(/^(\S+?)(시|군)(?=\s|$)/, '$1').replace(/^(\S+?)시(\S+구)$/, '$1 $2');
 const axisName = (key) => key.split('→').map(city).join('→');
+// 받침 있으면 '이에요', 없으면 '예요'
+const eyo = (w) => { const c = w.charCodeAt(w.length - 1); return c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 ? '이에요' : '예요'; };
 const TAG = { '수요관리': 'tag--demand', 'DRT 연계': 'tag--drt', '출퇴근 직행': 'tag--direct', '보류': 'tag--hold' };
 
 if (root) {
-  loadModel(MODEL_URL).then(start).catch((e) => {
+  const outline = fetch(OUTLINE_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  Promise.all([loadModel(MODEL_URL), outline]).then(([, ol]) => start(ol)).catch((e) => {
     root.querySelector('.mount-empty').textContent = '지도 데이터를 불러오지 못했어요. 페이지를 새로 고쳐 주세요.';
     console.error(e);
   });
 }
 
-function start() {
+function start(OL) {
   const M = getModel();
   const C = M.constants;
   const AX = M.axes.slice().sort((a, b) => a.id - b.id);
@@ -68,9 +73,29 @@ function start() {
   const order = AX.slice().sort((a, b) => (a.alloc_am > 0) - (b.alloc_am > 0) || b.Q_car - a.Q_car);
   const axisLabel = (a) => `${axisName(a.key)}, ${a.seoul ? '서울행' : '경기 내부'}, PCTR ${a.PCTR.toFixed(2)}, ${a.diag}${a.alloc_am ? `, 증편 출근 ${a.alloc_am}회 배분` : ''}`;
 
+  // 배경: 경기 시군·서울 자치구 경계 (1/1000도 정수, 첫 점 + 차분)
+  const ringPath = (r) => {
+    let x = r[0], y = r[1];
+    const pt = () => { const [a, b] = P(x / 1000, y / 1000); return `${f1(a)} ${f1(b)}`; };
+    let d = 'M' + pt();
+    for (let i = 2; i < r.length; i += 2) { x += r[i]; y += r[i + 1]; d += 'L' + pt(); }
+    return d + 'Z';
+  };
+  const originSet = new Set(AX.map((a) => a.origin));
+  const inView = ([x, y], m = 14) => x > m && x < W - m && y > m && y < H - 24;
+  const base = OL ? `
+    <defs><clipPath id="ex-clip"><rect x="0" y="0" width="${W}" height="${H}"/></clipPath></defs>
+    <g class="ex-base" clip-path="url(#ex-clip)" aria-hidden="true">
+      ${OL.features.map((f) => `<path class="sgg ${f.s === '서울' ? 's' : 'g'}" d="${f.r.map(ringPath).join('')}"/>`).join('')}
+      ${OL.features.filter((f) => f.s === '경기' && !originSet.has(f.n)).map((f) => ({ f, p: P(f.c[0], f.c[1]) }))
+        .filter(({ p }) => inView(p) && [...origins.values()].every(([x, y]) => Math.hypot(p[0] - x, p[1] - y) > 34))
+        .map(({ f, p }) => `<text class="sgg-name" x="${f1(p[0])}" y="${f1(p[1] + 4)}" text-anchor="middle">${esc(city(f.n))}</text>`).join('')}
+    </g>` : '';
+
   const svg = `
   <svg viewBox="0 0 ${W} ${H}" role="group" aria-label="20개 통근 축 지도. 화살표 키로 축을 옮겨 다니며 고를 수 있어요" id="ex-svg">
-    <circle class="seoul-zone" cx="${f1(sx0)}" cy="${f1(sy0 - 4)}" r="${f1(13 * pxPerKm)}"/>
+    ${base}
+    ${OL ? '' : `<circle class="seoul-zone" cx="${f1(sx0)}" cy="${f1(sy0 - 4)}" r="${f1(13 * pxPerKm)}"/>`}
     <text class="seoul-label" x="${f1(sx0)}" y="${f1(sy0 - 13 * pxPerKm - 8)}" text-anchor="middle">서울</text>
     <g class="ex-routes" id="ex-routes" hidden>
       ${RT.map((r) => { const [a, b] = P(r.origin_lon, r.origin_lat), [c, d] = P(r.dest_lon, r.dest_lat);
@@ -92,6 +117,7 @@ function start() {
       <line class="scalebar" x1="${PAD}" y1="${H - 14}" x2="${f1(PAD + 10 * pxPerKm)}" y2="${H - 14}"/>
       <line class="scalebar" x1="${PAD}" y1="${H - 18}" x2="${PAD}" y2="${H - 10}"/><line class="scalebar" x1="${f1(PAD + 10 * pxPerKm)}" y1="${H - 18}" x2="${f1(PAD + 10 * pxPerKm)}" y2="${H - 10}"/>
       <text class="scale-t" x="${f1(PAD + 10 * pxPerKm + 6)}" y="${H - 10}">10 km</text>
+      <g class="north" transform="translate(${W - 14} 16)"><path d="M0 -9L5.5 5L0 2L-5.5 5Z"/><text x="0" y="19" text-anchor="middle">북</text></g>
     </g>
   </svg>`;
 
@@ -102,8 +128,36 @@ function start() {
       <td class="num">${Math.round(a.T_car)} / ${Math.round(a.T_transit)}분</td>
       <td><span class="tag ${TAG[a.diag] ?? 'tag--hold'}">${esc(a.diag)}</span></td>
       <td class="num">${int(a.Q_car)}명</td>
-      <td class="num">${a.alloc_am ? `${a.alloc_am}회<br><span class="pos">${sgn(a.alloc_t_year)} t</span>` : '—'}</td>
+      <td class="num">${a.alloc_am ? `${a.alloc_am}회<br><span class="pos">${sgn(tryNet(a, a.alloc_am).t)}</span>` : '—'}</td>
     </tr>`).join('');
+
+  // 내 통근길 찾기: 출발 시군(경기 31개, 경계 파일이 없으면 축·노선 출발지) → 20개 축의 목적지
+  const ko = (a, b) => a.localeCompare(b, 'ko');
+  const FROMS = (OL ? OL.features.filter((f) => f.s === '경기').map((f) => f.n)
+                    : [...new Set([...AX.map((a) => a.origin), ...RT.map((r) => r.origin)])]).sort(ko);
+  const DESTS = [...new Set(AX.map((a) => a.dest_sgg))].sort(ko);
+  const fromPt = (n) => {
+    const a = AX.find((x) => x.origin === n);
+    if (a) return [a.origin_lon, a.origin_lat];
+    const f = OL && OL.features.find((x) => x.n === n);
+    if (f) return f.c;
+    const r = RT.find((x) => x.origin === n);
+    return r ? [r.origin_lon, r.origin_lat] : null;
+  };
+  const toPt = (n) => { const a = AX.find((x) => x.dest_sgg === n); return [a.dest_lon, a.dest_lat]; };
+  const km = (p, q) => Math.hypot((p[0] - q[0]) * kx, p[1] - q[1]) * 111.2;
+  const finder = `
+    <div class="panel ex-find" role="group" aria-labelledby="ex-find-title">
+      <h3 id="ex-find-title">내 통근길 찾기</h3>
+      <div class="ex-find-row">
+        <label class="ex-field"><span>출발 시군</span>
+          <select class="field" id="ex-from"><option value="">고르세요</option>${FROMS.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select></label>
+        <span class="ex-find-arrow" aria-hidden="true">→</span>
+        <label class="ex-field"><span>목적지 <small>분석한 20개 축의 목적지</small></span>
+          <select class="field" id="ex-to"><option value="">고르세요</option>${DESTS.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select></label>
+      </div>
+      <div class="ex-find-out" id="ex-find-out" aria-live="polite"><p>출발 시군과 목적지를 고르면 그 축을 지도에서 찾아 줘요.</p></div>
+    </div>`;
 
   root.removeAttribute('data-state');
   root.innerHTML = `
@@ -115,6 +169,7 @@ function start() {
       </div>
       <label class="switch"><input type="checkbox" id="ex-routes-on"><span>현행 편하G 28개 노선 겹쳐 보기</span></label>
     </div>
+    ${finder}
     <div class="ex-grid">
       <div>
         <div class="panel ex-view ex-map" id="ex-map">
@@ -125,6 +180,7 @@ function start() {
           </ul>
           ${svg}
           <p class="ex-hint">선 굵기는 승용차 통근자 수예요. 축을 누르거나, 지도를 고른 뒤 화살표 키로 옮겨 다닐 수 있어요. 고른 축은 출발 행정동 5곳(작은 원)도 보여요.</p>
+          ${OL ? `<p class="ex-attr">배경 경계: 통계청 SGIS 행정동 경계(공공누리 제1유형)를 <a href="https://github.com/vuski/admdongkor">vuski/admdongkor</a>가 가공한 자료(CC BY 4.0)를 시군 단위로 합치고 단순화했어요. 경기 시군과 서울 자치구만 그렸어요.</p>` : ''}
         </div>
         <div class="panel ex-view ex-list" id="ex-list" hidden>
           <div class="tablewrap"><table class="data">
@@ -144,7 +200,7 @@ function start() {
   const axisEls = [...root.querySelectorAll('.ex-axis')];
   const byId = new Map(AX.map((a) => [a.id, a]));
   const navOrder = AX.map((a) => a.id);
-  let liveTimer = 0;
+  let liveTimer = 0, refreshFinder = () => {};
   const say = (t, delay = 500) => { clearTimeout(liveTimer); liveTimer = setTimeout(() => { $('#ex-live').textContent = t; }, delay); };
 
   function drawSel() {
@@ -241,7 +297,7 @@ function start() {
         <div><dt>평균 도보 (대중교통 경로)</dt><dd>${Math.round(a.walk)}<small>분</small></dd></div>
         <div><dt>평균 환승</dt><dd>${a.xfer.toFixed(1)}<small>회</small></dd></div>
         <div><dt>φ 참고값 (현재 승용차 분담률, 상한 쪽)</dt><dd>${a.phi_proxy.toFixed(2)}</dd></div>
-        ${a.alloc_am ? `<div><dt>보고서 배분 출근 ${a.alloc_am}회의 연 순감축</dt><dd class="pos">${sgn(a.alloc_t_year)}<small>tCO₂/년</small></dd></div>` : ''}
+        ${a.alloc_am ? `<div><dt>보고서 배분 출근 ${a.alloc_am}회의 연 순감축</dt><dd class="pos">${sgn(tryNet(a, a.alloc_am).t)}<small>tCO₂/년</small></dd></div>` : ''}
         ${cand ? `<div><dt>모형 φ (상한 0.5로 자름)</dt><dd>${a.model_phi.toFixed(2)}</dd></div>` : ''}
       </dl>
       <div class="ex-try">
@@ -260,6 +316,7 @@ function start() {
     $('#ex-try-n').addEventListener('input', (e) => {
       tries.set(sel.id, +e.target.value);
       const r = renderTry();
+      refreshFinder();
       say(`출근 ${tries.get(sel.id)}회, 연간 ${sgn(r.t)} 톤`, 800);
     });
     renderTry();
@@ -311,6 +368,59 @@ function start() {
     $('#ex-key-rt').hidden = !e.target.checked;
     say(e.target.checked ? '현행 편하G 28개 노선을 점선으로 겹쳐 보여요.' : '현행 노선을 숨겼어요.', 200);
   });
+
+  // ───────── 내 통근길 찾기 ─────────
+  const fromSel = $('#ex-from'), toSel = $('#ex-to'), findOut = $('#ex-find-out');
+  let found = null;
+  function findText(a) {
+    const n = tries.get(a.id);
+    const r = tryNet(a, n);
+    const slow = a.PCTR >= 1 ? `대중교통이 승용차보다 ${a.PCTR.toFixed(1)}배 느려요` : `대중교통이 승용차보다 빨라요`;
+    const add = n ? `출근 ${n}회를 넣으면 ${sgn(r.t)} tCO₂/년이에요` : '출근 0회면 변화가 없어요';
+    return `<b>${esc(axisName(a.key))}</b>: PCTR ${a.PCTR.toFixed(2)}(${slow}), 진단은 ‘${esc(a.diag)}’, ${add}.`;
+  }
+  function updateFinder() {
+    const from = fromSel.value, to = toSel.value;
+    found = null;
+    mapEl.classList.remove('has-find');
+    if (!from || !to) {
+      findOut.innerHTML = `<p>${from || to ? (from ? '목적지' : '출발 시군') + '도 골라 주세요.' : '출발 시군과 목적지를 고르면 그 축을 지도에서 찾아 줘요.'}</p>`;
+      return;
+    }
+    const hit = AX.find((a) => a.origin === from && a.dest_sgg === to);
+    if (hit) {
+      found = hit;
+      if (sel.id !== hit.id) select(hit.id, { announce: false });
+      mapEl.classList.add('has-find');
+      findOut.innerHTML = `<p>${findText(hit)}</p><p class="ex-find-sub">지도와 오른쪽 상세에서 이 축을 골라 뒀어요. 아래 슬라이더로 회차를 바꾸면 이 문장도 바뀌어요.</p>`;
+      return;
+    }
+    const same = to === from || to.startsWith(from + ' ');
+    const p = fromPt(from), q = toPt(to);
+    let best = null;
+    if (p) for (const a of AX) {
+      const dO = km(p, [a.origin_lon, a.origin_lat]), dD = km(q, [a.dest_lon, a.dest_lat]);
+      if (!best || dO + dD < best.dO + best.dD) best = { a, dO, dD };
+    }
+    const nearWhy = ({ dO, dD }) => {
+      const o = Math.round(dO), d = Math.round(dD);
+      if (o < 1) return `출발 시군은 같고 목적지가 약 ${d} km 떨어져 있어요`;
+      if (d < 1) return `목적지는 같고 출발지 대표점이 약 ${o} km 떨어져 있어요`;
+      return `출발지 대표점이 약 ${o} km, 목적지가 약 ${d} km 떨어져 있어요`;
+    };
+    const near = best ? `가장 가까운 축은 <b>${esc(axisName(best.a.key))}</b>${eyo(axisName(best.a.key))}(${nearWhy(best)}).` : '';
+    findOut.innerHTML = `<p>${same ? '같은 시군 안 통근은 분석에 넣지 않았어요. ' : ''}${esc(from)}→${esc(to)}는 분석한 상위 20개 축에 없어요. ${near}</p>`
+      + (best ? `<button type="button" class="chip" id="ex-find-near" data-id="${best.a.id}">그 축 보기</button>` : '');
+    const nb = $('#ex-find-near');
+    if (nb) nb.addEventListener('click', () => {
+      select(best.a.id);
+      findOut.insertAdjacentHTML('beforeend', `<p class="ex-find-sub">${findText(best.a)}</p>`);
+      nb.remove();
+    });
+  }
+  fromSel.addEventListener('change', updateFinder);
+  toSel.addEventListener('change', updateFinder);
+  refreshFinder = () => { if (found && found.id === sel.id) findOut.querySelector('p').innerHTML = findText(found); };
 
   select(sel.id, { announce: false });
 }

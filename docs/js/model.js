@@ -222,6 +222,89 @@ export function baseAllocation(which = "ours", { withDemand = true } = {}) {
                                                                      : { key: x.key, km: x.km, tripsAM: alloc[x.key] }));
 }
 
+// ───────────────────────── 몬테카를로 (pctr_commute/montecarlo.py 이식) ─────────────────────────
+//
+// 파이썬과 같은 닫힌 식·같은 분포·같은 고정 배분. 다른 점은 난수뿐이에요:
+//   파이썬 numpy default_rng(20261021)(PCG64) ↔ 여기 mulberry32(시드). 같은 숫자를 시드로 써도 수열이 달라서
+//   확률은 표본 오차(2만 회에서 표준오차 약 0.3~0.4%p)만큼 달라요. model.test.mjs 10절에서 ±2%p 안인지 확인해요.
+//   연비 → 버스 상수: 파이썬은 41개 격자 선형 보간(np.interp), 여기는 정확한 아핀식(차이 ~1e-5 상대).
+// t = F · L · (N·φ·c_car − C0 − N·c_pax − R·C_dh),  F = 2 × 245 / 1000,  L = 출근 버스-km/일(고정 배분)
+// COACH_KMPL·R_DH·CAR_OCC는 한 시행에서 두 방식에 같은 값, N·φ는 방식별로 따로 뽑아요(파이썬과 같음).
+
+/** 시드 고정 32비트 PRNG. [0, 1) 균등 난수를 돌려줘요. */
+export function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** 몬테카를로 설정: model.json montecarlo.distributions(파이썬 DIST)와 고정 배분의 하루 출근 버스-km */
+export function mcSetup() {
+  const md = need(), c = md.constants;
+  const busKm = (al) => al.reduce((s, x) => s + x.km * x.tripsAM, 0);
+  return {
+    dist: md.montecarlo.distributions,           // {N_p:{low,high}, phi_p, N_b, phi_b, COACH_KMPL, R_DH, CAR_OCC}
+    Lp: busKm(baseAllocation("ours", { withDemand: false })),   // 1,463.5 km
+    Lb: busKm(baseAllocation("base", { withDemand: false })),   // 1,960.3 km
+    F: (2 * c.WORKDAYS) / 1000,
+    seed: md.montecarlo.seed,
+    n: md.montecarlo.n_draws,
+  };
+}
+
+/** 닫힌 식 (montecarlo.py t_year). k = vehicleConstants 결과 */
+export function mcTYear(L, N, phi, k, R, F = (2 * need().constants.WORKDAYS) / 1000) {
+  return F * L * (N * phi * k.CCAR - k.C0 - N * k.CPAX - R * k.CDH);
+}
+
+/**
+ * 한 번에 한 시행씩 뽑는 표본기. next() → {tp, tb} (tCO₂/년, PCTR 기준 / 현행 방식)
+ * @param {{seed?:number}} [o]  기본 시드는 파이썬과 같은 숫자(20261021). 수열은 파이썬과 달라요.
+ */
+export function mcSampler({ seed } = {}) {
+  const S = mcSetup();
+  const rnd = mulberry32(seed ?? S.seed);
+  const u = (k) => { const d = S.dist[k]; return d.low + (d.high - d.low) * rnd(); };
+  return {
+    ...S,
+    next() {
+      const Np = u("N_p"), pp = u("phi_p"), Nb = u("N_b"), pb = u("phi_b");
+      const kmpl = u("COACH_KMPL"), R = u("R_DH"), occ = u("CAR_OCC");
+      const k = vehicleConstants({ kmpl, occ });
+      return { tp: mcTYear(S.Lp, Np, pp, k, R, S.F), tb: mcTYear(S.Lb, Nb, pb, k, R, S.F) };
+    },
+  };
+}
+
+/** numpy.percentile(linear)과 같은 분위수 */
+function pctl(sorted, q) {
+  const i = (q / 100) * (sorted.length - 1), lo = Math.floor(i), hi = Math.ceil(i);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo);
+}
+
+/** 요약 (montecarlo.py summarize의 확률·분위수 부분). tp, tb는 같은 길이 배열 */
+export function mcSummary(tp, tb) {
+  const n = tp.length;
+  let a = 0, b = 0, c = 0;
+  for (let i = 0; i < n; i++) { if (tp[i] > 0) a++; if (tb[i] < 0) b++; if (tp[i] > tb[i]) c++; }
+  const q = (arr) => { const s = Float64Array.from(arr).sort(); return { p5: pctl(s, 5), p50: pctl(s, 50), p95: pctl(s, 95) }; };
+  return { n, P_pctr_gt_0: a / n, P_base_lt_0: b / n, P_pctr_gt_base: c / n, pctr_t: q(tp), base_t: q(tb) };
+}
+
+/** n회를 한꺼번에 (node 테스트·움직임 줄이기용) */
+export function mcRun({ n, seed } = {}) {
+  const s = mcSampler({ seed });
+  n = n ?? s.n;
+  const tp = new Float64Array(n), tb = new Float64Array(n);
+  for (let i = 0; i < n; i++) { const r = s.next(); tp[i] = r.tp; tb[i] = r.tb; }
+  return { tp, tb, ...mcSummary(tp, tb) };
+}
+
 // ───────────────────────── 설명용 ─────────────────────────
 
 /**

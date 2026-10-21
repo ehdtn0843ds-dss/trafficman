@@ -1,6 +1,8 @@
 /* 축 지도 탐색기 (#explorer-root) — site.css 토큰만 써요 */
 
-.ex{display:grid;gap:var(--s4)}
+.ex{display:grid;gap:var(--s4);--cut-ink:#0E6B4B;--add-ink:#A52A20}
+.ex .pos{color:var(--cut-ink)} .ex .neg{color:var(--add-ink)}
+.ex small{font-size:max(12px,.85em)}
 .ex-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s3) var(--s5)}
 .ex-bar .switch{font-size:var(--fs-sm)}
 .ex-grid{display:grid;grid-template-columns:minmax(0,23fr) minmax(0,27fr);gap:var(--s4);align-items:start}
@@ -16,13 +18,22 @@
 .ex-map text{font-size:12.5px;fill:var(--ink-2)}
 .ex-map .city{font-size:12px;font-weight:500;fill:var(--ink-2);paint-order:stroke;stroke:var(--paper);stroke-width:3.5px;stroke-linejoin:round}
 .ex-map .seoul-zone{fill:var(--seoul-tint);opacity:.7}
+.ex-base .sgg{stroke:var(--paper);stroke-width:1.2px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.ex-base .sgg.g{fill:#EEF1F3}
+.ex-base .sgg.s{fill:#E6EEF8}
+.ex-map .sgg-name{font-size:12px;fill:var(--muted);font-weight:400}
+.ex-map .north path{fill:var(--muted)}
+.ex-map .north text{font-size:12px;fill:var(--muted)}
+.ex-attr{font-size:12px;color:var(--muted);margin:4px 0 0;line-height:1.5}
+.ex-attr a{color:inherit}
 .ex-map .seoul-label{font-family:var(--display);font-size:22px;fill:var(--seoul-ink);opacity:.55;letter-spacing:.1em}
 .ex-map .scalebar{stroke:var(--muted);stroke-width:1.5}
-.ex-map .scale-t{font-size:11px;fill:var(--muted)}
+.ex-map .scale-t{font-size:12px;fill:var(--muted)}
 .ex-axis{cursor:pointer;outline:none}
 .ex-axis .ln{fill:none;stroke-linecap:round;opacity:.42;transition:opacity .2s}
 .ex-axis.is-alloc .ln{opacity:.95}
-.ex-axis .hit{fill:none;stroke:transparent;stroke-width:16;stroke-linecap:round}
+.ex-axis .hit{fill:none;stroke:transparent;stroke-width:16px;stroke-linecap:round;vector-effect:non-scaling-stroke}
+@media (max-width:620px),(pointer:coarse){.ex-axis .hit{stroke-width:28px}}
 .ex-axis.g .ln{stroke:var(--car)}
 .ex-axis.s .ln{stroke:var(--seoul)}
 .ex-axis:hover .ln{opacity:1}
@@ -31,19 +42,32 @@
 .ex-sel-case{fill:none;stroke:var(--asphalt);stroke-linecap:round}
 .ex-sel-line{fill:none;stroke-linecap:round}
 .ex-sel-line.g{stroke:var(--car)} .ex-sel-line.s{stroke:var(--seoul)}
-.ex-focus{fill:none;stroke:var(--car);stroke-width:3;stroke-dasharray:5 4;stroke-linecap:round;display:none}
+.ex-focus{fill:none;stroke:var(--focus-color,#1D3B66);stroke-width:3;stroke-dasharray:5 4;stroke-linecap:round;display:none}
 .ex-map.kbd .ex-focus{display:block}
 .ex-pt-o{fill:var(--paper);stroke:var(--asphalt);stroke-width:2}
 .ex-pt-d{fill:var(--asphalt)}
 .ex-pt-five{fill:var(--paper);stroke:var(--asphalt);stroke-width:1.5}
 .ex-five-ln{stroke:var(--asphalt);stroke-width:1;stroke-dasharray:2 3;opacity:.7}
 .ex-badge rect{fill:var(--asphalt)}
-.ex-badge text{fill:#fff;font-size:11px;font-weight:700;text-anchor:middle}
+.ex-badge text{fill:#fff;font-size:12px;font-weight:700;text-anchor:middle}
 .ex-destlabel{font-size:12px;font-weight:700;fill:var(--asphalt);paint-order:stroke;stroke:var(--paper);stroke-width:4px;stroke-linejoin:round}
 .ex-routes .rt{fill:none;stroke:var(--seoul-ink);stroke-width:1.6;stroke-dasharray:4 3;opacity:.75}
 .ex-routes .rt-o{fill:var(--paper);stroke:var(--seoul-ink);stroke-width:1.5}
 .ex-routes[hidden]{display:none}
 .ex-hint{font-size:var(--fs-xs);color:var(--muted);margin:6px 0 0}
+
+/* 내 통근길 찾기 */
+.ex-find{padding:var(--s4);display:grid;gap:10px}
+.ex-find h3{font-size:var(--fs-base);margin:0}
+.ex-find-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 12px}
+.ex-field{display:grid;gap:4px;font-size:var(--fs-xs);color:var(--ink-2);font-weight:700;min-width:0}
+.ex-field small{font-weight:400;color:var(--muted)}
+.ex-field select{min-width:11em;max-width:100%;min-height:40px;cursor:pointer}
+.ex-find-arrow{font-size:var(--fs-md);color:var(--muted);padding-bottom:8px}
+.ex-find-out{display:grid;gap:6px;justify-items:start}
+.ex-find-out p{margin:0;font-size:var(--fs-sm);color:var(--ink-2);line-height:1.6}
+.ex-find-out b{color:var(--asphalt)}
+.ex-find-out .ex-find-sub{font-size:var(--fs-xs);color:var(--muted)}
 
 /* 목록 */
 .ex-list table.data{min-width:0}
@@ -54,7 +78,7 @@
 .ex-pick{font:inherit;font-size:var(--fs-sm);font-weight:700;background:none;border:0;padding:2px 0;color:var(--asphalt);cursor:pointer;text-align:left;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 .ex-pick i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
 .ex-pick:hover{text-decoration:underline;text-underline-offset:3px}
-.ex-list td .tag{font-size:11.5px}
+.ex-list td .tag{font-size:12px}
 
 /* 상세 */
 .ex-detail{display:grid;gap:var(--s4);padding:var(--s5)}
@@ -75,8 +99,8 @@
 .ex-range .dot{position:absolute;top:7px;width:16px;height:16px;margin-left:-8px;border-radius:50%;left:var(--v);background:var(--c);border:2.5px solid var(--paper);box-shadow:0 0 0 1.5px var(--asphalt)}
 .ex-range .th{position:absolute;top:2px;bottom:6px;left:var(--v);width:0;border-left:1.5px dashed var(--asphalt)}
 .ex-range i{font-style:normal}
-.ex-range .th span{position:absolute;top:26px;left:0;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap}
-.ex-range .tk{position:absolute;top:26px;transform:translateX(-50%);font-size:11px;color:var(--muted)}
+.ex-range .th span{position:absolute;top:26px;left:0;transform:translateX(-50%);font-size:12px;color:var(--muted);white-space:nowrap}
+.ex-range .tk{position:absolute;top:26px;transform:translateX(-50%);font-size:12px;color:var(--muted)}
 .ex-times{display:grid;gap:6px;margin:0;padding:0;list-style:none}
 .ex-times li{display:grid;grid-template-columns:7.4em minmax(0,1fr);gap:10px;align-items:center;font-size:var(--fs-xs)}
 .ex-times .tb{position:relative;height:16px}
@@ -100,6 +124,9 @@
 }
 @media (max-width:480px){
   .ex-view{padding:var(--s3)}
+  .ex-find-row{display:grid;grid-template-columns:minmax(0,1fr)}
+  .ex-find-arrow{display:none}
+  .ex-field select{width:100%}
   .ex-detail{padding:var(--s4)}
   .ex-list table.data{min-width:520px}
 }

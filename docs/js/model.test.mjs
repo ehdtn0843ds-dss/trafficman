@@ -140,7 +140,33 @@ const pt = model.axes.find((a) => a.key === "평택시→화성시");
 check("평택→화성 대중교통 분", Math.round(pt.T_transit), 151, 0);
 check("평택→화성 신규 버스 분", Math.round(pt.T_new_bus), 69, 0);
 
+// ── 10. 몬테카를로 JS 이식 (montecarlo.py와 같은 식·분포, 난수만 mulberry32) ──
+const mcs = M.mcSetup();
+check("MC 출근 버스-km/일 PCTR", mcs.Lp, model.montecarlo.bus_km_per_day.pctr, 0.05);
+check("MC 출근 버스-km/일 현행", mcs.Lb, model.montecarlo.bus_km_per_day.base, 0.05);
+const kb = M.vehicleConstants({});
+const cf = model.montecarlo.closed_form_check;
+check("MC 닫힌 식 44명·φ0.5 = 파이썬", M.mcTYear(mcs.Lp, 44, 0.5, kb, 1), cf.pctr_44_0p5, 0.1);
+check("MC 닫힌 식 현행 19.5명·φ0.25 = 파이썬", M.mcTYear(mcs.Lb, 19.5, 0.25, kb, 1), cf.base_19p5_0p25, 0.1);
+check("MC 분포 = 파이썬 DIST", JSON.stringify(Object.fromEntries(Object.entries(mcs.dist).map(([k, v]) => [k, [v.low, v.high]]))),
+  JSON.stringify({ N_p: [20, 44], phi_p: [0.17, 0.6], N_b: [15, 40], phi_b: [0.15, 0.35], COACH_KMPL: [2.83, 4], R_DH: [0, 1], CAR_OCC: [1.1, 1.4] }), 0);
+const r1 = M.mcRun({ n: 20000, seed: 20261021 }), r1b = M.mcRun({ n: 20000, seed: 20261021 });
+check("MC 같은 시드 재현", r1.P_pctr_gt_0 === r1b.P_pctr_gt_0 && r1.tp[19999] === r1b.tp[19999] ? 1 : 0, 1, 0);
+const mcSeeds = [20261021, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const mcRows = [];
+for (const seed of mcSeeds) {
+  const r = M.mcRun({ n: 20000, seed });
+  check(`MC 시드 ${seed} P(PCTR>0) vs 파이썬 0.609 (±2%p)`, r.P_pctr_gt_0, mc.P_pctr_gt_0, 0.02);
+  check(`MC 시드 ${seed} P(현행<0) vs 파이썬 0.856 (±2%p)`, r.P_base_lt_0, mc.P_base_lt_0, 0.02);
+  check(`MC 시드 ${seed} P(PCTR>현행) vs 파이썬 0.873 (±2%p)`, r.P_pctr_gt_base, mc.P_pctr_gt_base, 0.02);
+  check(`MC 시드 ${seed} PCTR 중앙값 vs 파이썬 124 (±30 t)`, r.pctr_t.p50, mc.pctr_t.p50, 30);
+  check(`MC 시드 ${seed} 현행 중앙값 vs 파이썬 −388 (±30 t)`, r.base_t.p50, mc.base_t.p50, 30);
+  check(`MC 시드 ${seed} PCTR p5/p95 (±40 t)`, Math.max(Math.abs(r.pctr_t.p5 - mc.pctr_t.p5), Math.abs(r.pctr_t.p95 - mc.pctr_t.p95)), 0, 40);
+  mcRows.push(`  시드 ${seed}: P(PCTR>0) ${(r.P_pctr_gt_0 * 100).toFixed(1)}%  P(현행<0) ${(r.P_base_lt_0 * 100).toFixed(1)}%  P(PCTR>현행) ${(r.P_pctr_gt_base * 100).toFixed(1)}%  중앙값 ${r.pctr_t.p50.toFixed(0)} / ${r.base_t.p50.toFixed(0)}`);
+}
+
 console.log(rows.join("\n"));
+console.log("\n몬테카를로 JS(mulberry32) vs 파이썬(시드 20261021): 61.0% / 85.6% / 87.3%, 중앙값 124 / −388\n" + mcRows.join("\n"));
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 console.log(`디젤 연비 아핀식 최대 상대오차: 전체 ${maxRel.toExponential(2)}, 2.83–4.0 ${maxRelIn.toExponential(2)} / 수소 ${fRel.toExponential(2)}`);
 process.exit(fail ? 1 : 0);
