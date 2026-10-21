@@ -1,0 +1,81 @@
+{
+ "mstar_44": 11.3,
+ "mstar_20": 10.9,
+ "ours_km": 29.3,
+ "base_km": 39.2,
+ "grid": [
+  {
+   "N": 20,
+   "phi": 0.25,
+   "car_riders": 5.0,
+   "ours_t": -563,
+   "base_t": -754
+  },
+  {
+   "N": 20,
+   "phi": 0.35,
+   "car_riders": 7.0,
+   "ours_t": -372,
+   "base_t": -498
+  },
+  {
+   "N": 20,
+   "phi": 0.5,
+   "car_riders": 10.0,
+   "ours_t": -86,
+   "base_t": -115
+  },
+  {
+   "N": 30,
+   "phi": 0.25,
+   "car_riders": 7.5,
+   "ours_t": -340,
+   "base_t": -455
+  },
+  {
+   "N": 30,
+   "phi": 0.35,
+   "car_riders": 10.5,
+   "ours_t": -54,
+   "base_t": -72
+  },
+  {
+   "N": 30,
+   "phi": 0.5,
+   "car_riders": 15.0,
+   "ours_t": 375,
+   "base_t": 502
+  },
+  {
+   "N": 44,
+   "phi": 0.25,
+   "car_riders": 11.0,
+   "ours_t": -28,
+   "base_t": -38
+  },
+  {
+   "N": 44,
+   "phi": 0.35,
+   "car_riders": 15.4,
+   "ours_t": 391,
+   "base_t": 524
+  },
+  {
+   "N": 44,
+   "phi": 0.5,
+   "car_riders": 22.0,
+   "ours_t": 1020,
+   "base_t": 1367
+  }
+ ],
+ "model_base": {
+  "ours": [
+   44,
+   0.5
+  ],
+  "base": [
+   19.5,
+   0.25
+  ]
+ }
+}
