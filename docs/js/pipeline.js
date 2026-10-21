@@ -1,7 +1,12 @@
 // "어떻게 만들었나" 노선도 스테퍼와 단계별 시각화
 // 데이터는 모두 pipeline-data.js(저장소 결과 파일에서 뽑은 값)에서 와요.
 import { PIPELINE_DATA as D } from './pipeline-data.js';
-import { breakeven } from './breakeven.js';
+// 손익분기 계산(breakeven.js → model.json)은 7단계를 처음 그릴 때 불러와요. 모형이 늦어도 다른 단계는 바로 보여요.
+let beMod = null, beLoading = null;
+function loadBreakeven() {
+  if (!beLoading) beLoading = import('./breakeven.js').then(async (m) => { await m.ready; beMod = m; return m; });
+  return beLoading;
+}
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (s, el = document) => el.querySelector(s);
@@ -53,7 +58,8 @@ function vizOrigin() {
   const pts = O.pts.map((p) => ({ ...p, X: p.lng * kx, Y: -p.lat * ky }));
   const minX = Math.min(...pts.map((p) => p.X)), maxX = Math.max(...pts.map((p) => p.X));
   const minY = Math.min(...pts.map((p) => p.Y)), maxY = Math.max(...pts.map((p) => p.Y));
-  const box = narrow ? { x0: 116, x1: W - 96, y0: 178, y1: H - 56 } : { x0: 300, x1: 470, y0: 58, y1: 222 };
+  // 오른쪽 점의 이름표("비전1동 4.9만 명")가 판 안에 들어오게 오른쪽 여백을 넉넉히 둬요.
+  const box = narrow ? { x0: 112, x1: W - 110, y0: 178, y1: H - 56 } : { x0: 286, x1: W - 160, y0: 58, y1: 222 };
   const s = Math.min((box.x1 - box.x0) / (maxX - minX), (box.y1 - box.y0) / (maxY - minY));
   const px = (X) => box.x0 + (X - minX) * s;
   const py = (Y) => box.y0 + (Y - minY) * s;
@@ -123,30 +129,65 @@ function vizTimes() {
 /* ------------------------------------------------------------------ */
 /* 4. 축별 PCTR                                                          */
 /* ------------------------------------------------------------------ */
+let thrT = 1.5;   // 4단계 슬라이더의 분류 기준 (보고서 기준 1.5)
+const isCand = (a, th) => a.car >= 3000 && (a.pctr3 ?? a.pctr) >= th;
 function vizPctr() {
   const el = $('#viz-pctr');
   if (!el) return;
+  const th = thrT, atReport = Math.abs(th - 1.5) < 1e-9;
   const rows = [...D.top20].sort((a, b) => b.pctr - a.pctr);
-  const W = widthOf(el), L = 112, R = 40, top = 24, rowH = 19, H = top + rows.length * rowH + 30;
+  const W = widthOf(el), L = 112, R = 40, top = 24, rowH = 19;
+  const yRoutes = top + rows.length * rowH + 22, H = yRoutes + 22 + 30;
   const x = linear(0, 3.2, L, W - R);
-  let g = svgOpen(W, H, '승용차 통근 상위 20개 축의 PCTR. 경기 내부 축 대부분이 1.5를 넘고 서울행은 1 안팎');
+  let g = svgOpen(W, H, `승용차 통근 상위 20개 축과 현행 편하G 28개 노선의 PCTR. 기준 ${th.toFixed(2)} 이상 축 ${rows.filter((a) => isCand(a, th)).length}개, 노선 ${D.routes.filter((r) => r.pctr >= th).length}개`);
   [0, 0.5, 1, 1.5, 2, 2.5, 3].forEach((t) => {
     g += `<line x1="${x(t)}" y1="${top - 6}" x2="${x(t)}" y2="${H - 26}" class="grid-line"/><text x="${x(t)}" y="${H - 10}" text-anchor="middle" class="axis-label">${t}</text>`;
   });
+  // 기준 아래 영역은 옅게 덮어서 '수요관리' 쪽임을 보여요.
+  g += `<rect x="${L}" y="${top - 6}" width="${x(th) - L}" height="${H - 26 - top + 6}" fill="#EDF1F4" opacity=".55"/>`;
   g += `<line x1="${x(1)}" y1="${top - 6}" x2="${x(1)}" y2="${H - 26}" class="axis-line"/><text x="${x(1) - 4}" y="${top - 10}" text-anchor="end" class="axis-label">같은 시간</text>`;
-  g += `<line x1="${x(1.5)}" y1="${top - 6}" x2="${x(1.5)}" y2="${H - 26}" class="threshold"/><text x="${x(1.5) + 4}" y="${top - 10}" class="threshold-label">1.5 기준</text>`;
+  if (!atReport) g += `<line x1="${x(1.5)}" y1="${top - 6}" x2="${x(1.5)}" y2="${H - 26}" class="threshold" stroke-opacity=".4"/>`;
+  g += `<line x1="${x(th)}" y1="${top - 6}" x2="${x(th)}" y2="${H - 26}" class="threshold"${atReport ? '' : ' style="stroke-dasharray:none;stroke-width:2"'}/><text x="${x(th) + 4}" y="${top - 10}" class="threshold-label">${atReport ? '1.5 기준' : `기준 ${th.toFixed(2)}`}</text>`;
   rows.forEach((a, i) => {
     const y = top + i * rowH + rowH / 2;
     const c = a.seoul ? 'seoul' : 'car';
-    const strong = a.trips > 0;
-    g += `<text x="${L - 10}" y="${y + 4}" text-anchor="end" style="font-size:11.5px;${strong ? 'font-weight:700' : ''}">${esc(axisLabel(a))}</text>`;
-    g += `<line x1="${x(a.lo)}" y1="${y}" x2="${x(a.hi)}" y2="${y}" class="stroke-${c}" stroke-width="2" stroke-opacity=".45"/>`;
-    g += `<circle cx="${x(a.single)}" cy="${y}" r="3.6" fill="#fff" class="stroke-ink" stroke-width="1.3"/>`;
-    g += `<circle cx="${x(a.pctr)}" cy="${y}" r="5" class="fill-${c}"><title>${esc(axisLabel(a))} PCTR ${a.pctr} (5곳 ${a.lo}~${a.hi}, 한 곳 ${a.single})</title></circle>`;
+    const on = isCand(a, th);
+    g += `<text x="${L - 10}" y="${y + 4}" text-anchor="end" style="font-size:12px;${a.trips > 0 ? 'font-weight:700' : ''}"${on ? '' : ' class="t-muted"'}>${esc(axisLabel(a))}</text>`;
+    g += `<line x1="${x(a.lo)}" y1="${y}" x2="${x(a.hi)}" y2="${y}" class="stroke-${c}" stroke-width="2" stroke-opacity="${on ? 0.45 : 0.25}"/>`;
+    g += `<circle cx="${x(a.single)}" cy="${y}" r="3.6" fill="#fff" class="stroke-ink" stroke-width="1.3" stroke-opacity="${on ? 1 : 0.5}"/>`;
+    g += `<circle cx="${x(a.pctr)}" cy="${y}" r="5" class="fill-${c}" fill-opacity="${on ? 1 : 0.4}"><title>${esc(axisLabel(a))} PCTR ${a.pctr} (5곳 ${a.lo}~${a.hi}, 한 곳 ${a.single})</title></circle>`;
+  });
+  // 현행 편하G 28개 노선
+  g += `<line x1="${L - 100}" y1="${yRoutes - 14}" x2="${W - R}" y2="${yRoutes - 14}" class="grid-line"/>`;
+  g += `<text x="${L - 10}" y="${yRoutes + 4}" text-anchor="end" style="font-size:12px;font-weight:700">현행 편하G 28개</text>`;
+  D.routes.forEach((r, i) => {
+    const y = yRoutes + (i % 2 ? 5 : -5);
+    const on = r.pctr >= th;
+    g += `<circle cx="${x(r.pctr)}" cy="${y}" r="4" ${on ? 'class="fill-seoul stroke-seoul"' : 'fill="#fff" class="stroke-seoul"'} stroke-width="1.6"><title>${esc(r.o)}→${esc(r.to)} PCTR ${r.pctr.toFixed(2)}${r.seoul ? ' (서울행)' : ''}</title></circle>`;
   });
   g += `<text x="${W - R}" y="${H - 10}" text-anchor="end" class="axis-title" dx="34">PCTR</text>`;
   g += '</svg>';
   el.innerHTML = g;
+}
+
+function thrControl() {
+  const inp = $('#thr'), out = $('#thrOut'), res = $('#thr-out'), reset = $('#thr-reset');
+  if (!inp) return;
+  const setFill = () => inp.style.setProperty('--fill', ((+inp.value - +inp.min) / (+inp.max - +inp.min)) * 100 + '%');
+  const update = () => {
+    thrT = Math.round(+inp.value * 100) / 100;
+    out.textContent = thrT.toFixed(2);
+    setFill();
+    const cand = D.top20.filter((a) => isCand(a, thrT)).length;
+    const routes = D.routes.filter((r) => r.pctr >= thrT).length;
+    res.innerHTML = `20개 축 중 버스 후보 <b>${cand}개</b>, 수요관리 <b>${20 - cand}개</b>예요. 현행 편하G 28개 노선 중 기준을 넘는 노선은 <b>${routes}개</b>예요.`;
+    if (reset) reset.hidden = Math.abs(thrT - 1.5) < 1e-9;
+    drawnAt['step-4'] = null;
+    drawPanel($('#step-4'));
+  };
+  inp.addEventListener('input', update);
+  reset?.addEventListener('click', () => { inp.value = '1.5'; update(); inp.focus(); });
+  setFill();
 }
 
 /* ------------------------------------------------------------------ */
@@ -208,6 +249,13 @@ function vizDiag() {
 function vizBreakeven() {
   const el = $('#viz-breakeven');
   if (!el) return;
+  if (!beMod) {
+    el.innerHTML = '<p class="viz-wait">계산 모형을 불러오는 중이에요.</p>';
+    loadBreakeven().then(() => { drawnAt['step-7'] = null; drawPanel($('#step-7')); })
+      .catch(() => { el.innerHTML = '<p class="viz-wait is-error">계산 모형(model.json)을 불러오지 못해 곡선을 그리지 못했어요. 새로고침해 보세요. 기준값은 φ 1.0에서 10.7명, φ 0.5에서 21.9명, φ 0.25에서 45.3명이에요.</p>'; });
+    return;
+  }
+  const breakeven = beMod.breakeven;
   const W = widthOf(el), H = 340, L = 50, R = 20, T = 16, B = 46;
   const x = linear(0.15, 1.0, L, W - R);
   const y = linear(0, 60, H - B, T);
@@ -246,15 +294,90 @@ function vizBreakeven() {
 function vizAlloc() {
   const el = $('#viz-alloc');
   if (!el) return;
+  // 출근 50회 칸 50개를 한 번 만들고, 토글할 때 같은 칸을 새 자리로 옮겨요(FLIP).
   const ours = D.top20.filter((a) => a.trips > 0).sort((a, b) => b.trips - a.trips);
-  const cells = (n) => '<i></i>'.repeat(n);
+  const seoulR = D.routes.filter((r) => r.seoul), ggR = D.routes.filter((r) => !r.seoul);
+  const sum = (rs) => rs.reduce((s, r) => s + r.am, 0);
+  const cells = Array.from({ length: 50 }, () => { const i = document.createElement('i'); i.className = 'alloc-cell'; return i; });
+  const READ = {
+    base: { cls: 'is-add', v: '−793', note: '연 793 t 증가예요. +는 감축, −는 증가예요.',
+      sr: `현행 방식: 출근 50회를 서울행 ${seoulR.length}개 노선에 ${sum(seoulR)}회, 경기 내부 ${ggR.length}개 노선에 ${sum(ggR)}회씩 1~2회로 나눠요. 연간 순감축 −793 tCO₂/년, 즉 연 793 t 증가예요.` },
+    ours: { cls: 'is-cut', v: '+1,020', note: '연 1,020 t 감축이에요. +는 감축, −는 증가예요.',
+      sr: `PCTR 기준: 출근 50회를 ${ours.map((a) => `${axisLabel(a)} ${a.trips}회`).join(', ')}로 4개 축에 모아요. 연간 순감축 +1,020 tCO₂/년, 즉 연 1,020 t 감축이에요.` },
+  };
   el.innerHTML =
-    `<div class="trip-row" style="--c:var(--car)"><h4><span>PCTR 기준, 4개 축</span><span class="pos">+1,020 t/년</span></h4><div class="trip-groups">` +
-    ours.map((a) => `<div class="trip-group"><div class="trip-cells" aria-hidden="true">${cells(a.trips)}</div><span>${esc(axisLabel(a))} ${a.trips}회</span></div>`).join('') +
-    `</div></div>` +
-    `<div class="trip-row" style="--c:var(--seoul)"><h4><span>현행 방식, 28개 노선</span><span class="neg">−793 t/년</span></h4><div class="trip-groups" aria-hidden="true">` +
-    D.allocBase.map((n) => `<div class="trip-group"><div class="trip-cells">${cells(n)}</div></div>`).join('') +
-    `</div><span class="note">노선마다 1~2회씩, 대부분 서울행이에요.</span></div>`;
+    `<div class="alloc-head"><div class="toggle" role="group" aria-label="배분 방식">` +
+    `<button type="button" data-mode="base" aria-pressed="true">현행 방식</button><button type="button" data-mode="ours" aria-pressed="false">PCTR 기준</button></div>` +
+    `<div class="readout readout--sm" id="alloc-ro"><span class="readout-label">연간 순감축 (모형 기준값)</span>` +
+    `<span class="readout-value"><span class="v"></span><span class="readout-unit">tCO₂/년</span></span><span class="readout-note"></span></div></div>` +
+    `<div class="alloc-field" aria-hidden="true"></div><p class="sr-only" aria-live="polite" id="alloc-sr"></p>` +
+    `<ul class="key"><li><span class="sw sw--seoul"></span>현행 서울행 노선</li><li><span class="sw sw--seoul-light"></span>현행 경기 내부 노선</li><li><span class="sw sw--car"></span>PCTR 기준 산단 축</li></ul>`;
+  const field = $('.alloc-field', el), ro = $('#alloc-ro', el), sr = $('#alloc-sr', el);
+  const btns = [...el.querySelectorAll('.toggle button')];
+
+  const section = (title, sub, groups) => {
+    const s = document.createElement('div');
+    s.className = 'alloc-sec';
+    s.innerHTML = `<h4>${title}<small>${sub}</small></h4><div class="alloc-groups"></div>`;
+    const gw = $('.alloc-groups', s);
+    groups.forEach(({ n, label }) => {
+      const gEl = document.createElement('div');
+      gEl.className = 'alloc-group';
+      gEl.innerHTML = `<div class="alloc-cells"></div>${label ? `<span>${esc(label)}</span>` : ''}`;
+      gw.appendChild(gEl);
+      gEl._n = n;
+    });
+    return s;
+  };
+  // mode별 칸 배치와 색
+  function build(mode) {
+    let secs, colorOf;
+    if (mode === 'base') {
+      secs = [section(`서울행 ${seoulR.length}개 노선`, `${sum(seoulR)}회`, seoulR.map((r) => ({ n: r.am }))),
+              section(`경기 내부 ${ggR.length}개 노선`, `${sum(ggR)}회`, ggR.map((r) => ({ n: r.am })))];
+      colorOf = (i) => (i < sum(seoulR) ? 'alloc-cell' : 'alloc-cell c-gg');
+    } else {
+      secs = [section('경기 내부 산단 4개 축', '50회, 축당 최대 15회', ours.map((a) => ({ n: a.trips, label: `${axisLabel(a)} ${a.trips}회` })))];
+      colorOf = () => 'alloc-cell c-ours';
+    }
+    let k = 0;
+    secs.forEach((s) => s.querySelectorAll('.alloc-group').forEach((gEl) => {
+      const box = $('.alloc-cells', gEl);
+      for (let j = 0; j < gEl._n; j++) box.appendChild(cells[k++]);
+    }));
+    field.replaceChildren(...secs);
+    return colorOf;
+  }
+  let mode = null;
+  function setMode(next, animate) {
+    if (next === mode) return;
+    mode = next;
+    const first = animate ? cells.map((c) => c.getBoundingClientRect()) : null;
+    const colorOf = build(next);
+    if (first) {
+      cells.forEach((c, i) => {
+        const l = c.getBoundingClientRect();
+        c.style.transition = 'none';
+        c.style.transform = `translate(${first[i].left - l.left}px,${first[i].top - l.top}px)`;
+      });
+      void field.offsetWidth;
+      cells.forEach((c, i) => {
+        const d = i * 9;
+        c.style.transition = `transform .6s cubic-bezier(.3,.7,.2,1) ${d}ms, background-color .45s ease ${d}ms, border-color .45s ease ${d}ms`;
+        c.style.transform = '';
+        c.className = colorOf(i);
+      });
+    } else cells.forEach((c, i) => { c.style.transition = ''; c.style.transform = ''; c.className = colorOf(i); });
+    const R = READ[next];
+    ro.className = `readout readout--sm ${R.cls}`;
+    $('.v', ro).textContent = R.v;
+    $('.readout-note', ro).textContent = R.note;
+    sr.textContent = R.sr;
+    btns.forEach((b) => b.setAttribute('aria-pressed', b.dataset.mode === next ? 'true' : 'false'));
+  }
+  btns.forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode, !reduceMotion)));
+  setMode('base', false);
+  sr.textContent = '';   // 처음엔 읽지 않고, 토글할 때만 알려요
 }
 
 /* ------------------------------------------------------------------ */
@@ -280,7 +403,7 @@ function vizMC() {
   g += `<text x="${x(0) - 8}" y="${mid - hMax - 18}" text-anchor="end" class="axis-label">0 t</text>`;
   g += `<text x="${x(0) - 8}" y="${mid + hMax + 26}" text-anchor="end" class="data-label t-add" style="font-size:13px">현행 방식 86%가 증가 쪽</text>`;
   (W >= 480 ? [-1500, -1000, -500, 500, 1000, 1500] : [-1000, 1000]).forEach((t) => { g += `<text x="${x(t)}" y="${H - 6}" text-anchor="middle" class="axis-label">${t > 0 ? '+' : ''}${fmt(t)}</text>`; });
-  g += `<text x="${W - R}" y="${mid + hMax + 26}" text-anchor="end" class="axis-title">연간 순감축 tCO₂</text>`;
+  g += `<text x="${W - R}" y="${mid + hMax + 26}" text-anchor="end" class="axis-title">연간 순감축 (tCO₂/년)</text>`;
   g += '</svg>';
   el.innerHTML = g;
 }
@@ -348,7 +471,7 @@ function stepper() {
 }
 
 // HTML로 그리는 그림은 한 번만, SVG 그림은 보일 때 그 폭에 맞춰 그려요.
-vizAxes(); vizDiag(); vizAlloc();
+vizAxes(); vizDiag(); vizAlloc(); thrControl();
 const SVG_VIZ = { 'step-2': [vizOrigin, '#viz-origin'], 'step-3': [vizTimes, '#viz-times'], 'step-4': [vizPctr, '#viz-pctr'],
   'step-5': [vizLogit, '#viz-logit'], 'step-7': [vizBreakeven, '#viz-breakeven'], 'step-9': [vizMC, '#viz-mc'] };
 const drawnAt = {};
