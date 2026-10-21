@@ -2,12 +2,12 @@
 탄소 손익분기 탑승인원 모델 (엔진맵 없이 윌런스 선 + 공인 연비/전비 보정)
 
 차량 종방향 동역학 (기호는 보고서 전체에서 동일하게 사용)
-  F(t) = m(1+δ)·a(t) + m·g·C_rr·cosθ + m·g·sinθ + ½·ρ·C_d·A·v(t)²
+  F(t) = m(1+δ)·a(t) + m·g·C_rr·cosγ + m·g·sinγ   (γ: 도로 경사각) + ½·ρ·C_d·A·v(t)²
   P_w(t) = F(t)·v(t)                                   [W] 바퀴 출력
 
 에너지 변환 (엔진맵 대체)
   내연기관(윌런스 선): P_f = P_idle + (max(P_w,0) + P_aux) / η
-  전기:                P_b = P_aux + P_w/η_d   (P_w > 0)
+  전기·수소:           P_b = P_aux + P_w/η_d   (P_w > 0, 수소는 P_b를 저위발열량 120 MJ/kg으로 나눠 kg H₂)
                        P_b = P_aux + η_r·P_w   (P_w ≤ 0, 회생제동)
   η(또는 η_d)는 차종별 공인 연비·인증 전비에 맞춰 역산 → 역산값이 물리적 범위에 드는지로 검증
 
@@ -248,7 +248,7 @@ def main():
         ax.plot(N, dC, ls, color="#c8372d", lw=1.8, label=f"φ = {phi}")
     ax.axhline(0, color="#16202e", lw=0.8)
     ax.set_xlabel("버스 1회 탑승인원 N (명)"); ax.set_ylabel("운행 1회 순감축량 ΔC (kg CO₂)")
-    ax.set_title(f"디젤 우등버스(28석), 회송 포함(r=1), 축 길이 {a.d:.0f} km", fontsize=10)
+    ax.set_title(f"{cal['coach'].name}, 회송 포함(r=1), 축 길이 {a.d:.0f} km", fontsize=10)
     ax.grid(alpha=0.25); ax.legend(title="승용차 전환율", fontsize=8, title_fontsize=8, frameon=False)
     fig.tight_layout(); fig.savefig(out / "breakeven_curve.png"); plt.close(fig)
 

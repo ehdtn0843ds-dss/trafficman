@@ -40,6 +40,9 @@ COACH_KMPL = 3.49     # 유니버스 디젤 45석: 공인연비 미공개 → �
 VAN_KMPL = 8.0        # 쏠라티: 표시연비 대상 아님 → 실사용 약 8 km/L (6–10)
 COACH_CAP = 44        # 직행 정원: 편하G 허용 좌석형 최대 44인승(의왕 노선 44인승 운행), 유니버스 차체 (민감도 28 우등·41·45 유니버스 기본)
 PHI_MAX = 0.5         # φ 상한: 국내 최대 사례 GTX-A 승용차 이용자 전환율 50%(국토연구원 Brief 1036, 2025) 이하로 제한 (0.4–0.6)
+LOAD = 1.0            # 새 회차 최대 탑승률(정원 대비). 만석 가정이 결과를 좌우하므로 민감도 0.7
+CAR_OCC = 1.1         # 승용차 통근 재차인원 (KTDB 출근·등교 1.1, 전 목적 1.4 → 민감도 1.3)
+PT_KM_SCALE = 1.0     # 평택→화성 축 길이 배율(목적지 대표점 민감도: 기아 화성공장 대신 가까운 업무지면 0.7)
 PLAN_TRIPS = 100      # 2030 증편: 하루 84회 → 184회(경기도, 출퇴근 합산) → 출근 50회 + 퇴근 50회
 AM_TRIPS = PLAN_TRIPS // 2
 KAPPA, BONUS = None, None   # 보정값: 현행 편하G 탑승 실적과 φ에 맞춰 main()에서 역산
@@ -62,9 +65,9 @@ def vehicle_constants(d_km=25.0, drt_km=4.0):
         cal[key] = rp(cv, P_aux_kW=veh.P_aux_kW, capacity=COACH_CAP if key == "coach" else cv.capacity)
     out = {}
     for cls, key, mode, km in [("출퇴근 직행", "coach", "direct", d_km), ("DRT 연계", "van", "drt", drt_km)]:
-        r = be.breakeven(cal[key], cal["car"], km, 45.0, 1.0, 1.0, R_DH, 1.1, mode)
+        r = be.breakeven(cal[key], cal["car"], km, 45.0, 1.0, 1.0, R_DH, CAR_OCC, mode)
         out[cls] = dict(C0=r["C0"] / km, CDH=r["C_dh"] / km, CPAX=r["c_pax"] / km, CAP=cal[key].capacity, eta=cal[key].eta)
-    rc = be.breakeven(cal["coach"], cal["car"], d_km, 45.0, 1.0, 1.0, R_DH, 1.1, "direct")
+    rc = be.breakeven(cal["coach"], cal["car"], d_km, 45.0, 1.0, 1.0, R_DH, CAR_OCC, "direct")
     return out, rc["c_car"] / d_km
 
 
@@ -144,7 +147,7 @@ def daily_saving(n, c):
     if n <= 0:
         return 0.0
     v = VEH[c["cls"]]
-    riders = min(v["CAP"], c["D"] / n)
+    riders = min(v["CAP"] * LOAD, c["D"] / n)
     bus_km = c["bus_km"]
     return n * (riders * c["phi"] * CCAR_KM * c["km"] - (v["C0"] * bus_km + riders * v["CPAX"] * bus_km) - R_DH * v["CDH"] * bus_km)
 
@@ -175,7 +178,7 @@ def evaluate(alloc, cands):
     """증분 평가: 기존 운행 n0회에 alloc회를 더했을 때 늘어나는 감축량·탑승·전환"""
     n0 = lambda k: cands[k].get("n0", 0)
     kg = sum(daily_saving(n0(k) + alloc[k], cands[k]) - daily_saving(n0(k), cands[k]) for k in alloc)
-    cap = lambda k: VEH[cands[k]["cls"]]["CAP"]
+    cap = lambda k: VEH[cands[k]["cls"]]["CAP"] * LOAD
     rid = lambda k, n: min(cands[k]["D"], n * cap(k))
     riders = sum(rid(k, n0(k) + alloc[k]) - rid(k, n0(k)) for k in alloc)
     car_shift = sum((rid(k, n0(k) + alloc[k]) - rid(k, n0(k))) * cands[k]["phi"] for k in alloc)
@@ -270,7 +273,8 @@ def main(verbose=True):
         for c in (["DRT 연계", "출퇴근 직행"] if cls == "DRT 연계" else ["출퇴근 직행"]):
             rr = dict(r); rr["class"] = c
             D, phi, T_new = service_demand(rr, alpha[r["o"]])
-            opts[c] = dict(D=D * N_ROUTE_SLOTS, phi=phi, km=r["car_km"], cls=c, bus_km=DRT_KM if c == "DRT 연계" else r["car_km"], n0=0, T_new=T_new)
+            km = r["car_km"] * (PT_KM_SCALE if k == "평택시→화성시" else 1.0)
+            opts[c] = dict(D=D * N_ROUTE_SLOTS, phi=phi, km=km, cls=c, bus_km=DRT_KM if c == "DRT 연계" else km, n0=0, T_new=T_new)
         best = max(opts, key=lambda c: daily_saving(MAX_TRIPS, opts[c]))
         cands[k] = opts[best]
         w0 = r["walk"] / 2
@@ -279,7 +283,8 @@ def main(verbose=True):
                       **{f"phi_{c}": round(o["phi"], 3) for c, o in opts.items()})
     ours = greedy(cands, AM_TRIPS)
 
-    # 현행 방식: 기존 노선에 현재 운행 비율대로 100회 추가 → 기존 운행분을 뺀 증분으로 평가
+    # 현행 방식: 기존 노선 유형에 현재 출근 운행 비율대로 50회를 새 회차로 추가(n0=0).
+    # 새 회차도 현행 노선과 같은 수요(보정된 κ·B, 회당 약 20명)를 얻는다고 가정
     base_c, w = {}, {}
     for b in routes:
         D, phi, _ = service_demand(b["rr"], b["alpha"])
@@ -298,7 +303,7 @@ def main(verbose=True):
                veh={k: {kk: round(vv, 4) for kk, vv in v.items()} for k, v in VEH.items()}, CCAR_KM=CCAR_KM,
                params=dict(THETA=THETA, ACCESS=ACCESS_DIRECT, DETOUR=DETOUR, R=R_DH, BETA=BETA, DRT_KM=DRT_KM,
                            MAX_TRIPS=MAX_TRIPS, DRT_WAIT=DRT_WAIT, WORKDAYS=WORKDAYS, TARGET_RIDE=TARGET_RIDE,
-                           TARGET_PHI=TARGET_PHI, PLAN_TRIPS=PLAN_TRIPS, COACH_KMPL=COACH_KMPL, COACH_CAP=COACH_CAP, VAN_KMPL=VAN_KMPL, PHI_MAX=PHI_MAX))
+                           TARGET_PHI=TARGET_PHI, PLAN_TRIPS=PLAN_TRIPS, LOAD=LOAD, CAR_OCC=CAR_OCC, PT_KM_SCALE=PT_KM_SCALE, COACH_KMPL=COACH_KMPL, COACH_CAP=COACH_CAP, VAN_KMPL=VAN_KMPL, PHI_MAX=PHI_MAX))
     json.dump(res, open(ROOT / "result/allocation.json", "w", encoding="utf-8"), ensure_ascii=False, indent=2, default=float)
     if verbose:
         pd.set_option("display.width", 220)

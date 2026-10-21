@@ -14,12 +14,13 @@ ROOT = Path(__file__).resolve().parents[1]
 P = ROOT / "pctr_commute"
 RES = ROOT / "resid"
 OUT = ROOT / "report/figs"; OUT.mkdir(parents=True, exist_ok=True)
-FD = ROOT / "fonts"   # Pretendard OTF를 여기에 두면 사용 (없으면 기본 글꼴)
+FD = ROOT / "fonts"   # Pretendard TTF (SIL OFL 1.1)
+_have = False
 for w in ("Regular", "Medium", "SemiBold", "Bold"):
     if (FD / f"Pretendard-{w}.ttf").exists():
-        fm.fontManager.addfont(str(FD / f"Pretendard-{w}.ttf"))
+        fm.fontManager.addfont(str(FD / f"Pretendard-{w}.ttf")); _have = True
 plt.rcParams.update({
-    "font.family": "Pretendard", "font.size": 8.5, "axes.titlesize": 9.5, "axes.titleweight": "semibold",
+    "font.family": "Pretendard" if _have else "NanumGothic", "font.size": 8.5, "axes.titlesize": 9.5, "axes.titleweight": "semibold",
     "axes.labelsize": 8.5, "xtick.labelsize": 7.5, "ytick.labelsize": 7.5, "legend.fontsize": 7.5,
     "axes.edgecolor": "#9aa3af", "axes.linewidth": 0.6, "xtick.color": "#4b5563", "ytick.color": "#4b5563",
     "axes.labelcolor": "#1f2937", "text.color": "#1f2937", "axes.unicode_minus": False,
@@ -231,7 +232,7 @@ def fig4():
                 ax.annotate(f"N* {ns:.1f}명", (ns, 0), xytext=(0, 7 if r == 1.0 else -12), textcoords="offset points",
                             ha="center", fontsize=6.8, color=INK2, bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.9), zorder=6)
             else:
-                ax.annotate(f"N* {ns:.1f}명 > 정원", (CAP, f[-1]), xytext=(-3, -10 if r == 1.0 else 5), textcoords="offset points",
+                ax.annotate(f"N* {ns:.1f}명 > 정원", (CAP, f[-1]), xytext=(-4, 9 if r == 1.0 else 5), textcoords="offset points",
                             ha="right", fontsize=6.8, color=INK2, bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.9), zorder=6)
     ff = N * 0.25 * rf["c_car"] - (rf["C0"] + N * rf["c_pax"]) - rf["C_dh"]
     ax.plot(N, ff, color=VIOLET, lw=1.5, ls=(0, (1, 1.5)), zorder=3)
@@ -258,7 +259,7 @@ def fig4():
 # ───────────── 그림 5: 배분 비교 + 민감도 ─────────────
 def fig5():
     o, b = alloc["ours"], alloc["base"]
-    fig = plt.figure(figsize=(W, W * 0.62))
+    fig = plt.figure(figsize=(W, W * 0.92))
     gs = fig.add_gridspec(1, 2, width_ratios=[1, 1.55], wspace=0.42)
     a1 = fig.add_subplot(gs[0])
     vals = [o["t_year"], b["t_year"]]
@@ -276,7 +277,8 @@ def fig5():
     a2 = fig.add_subplot(gs[1])
     NAME = {"THETA": "θ 대중교통 이동 비율", "TARGET_PHI": "현행 노선 φ 보정값", "TARGET_RIDE": "현행 회당 탑승 보정값",
             "R_DH": "r 회송 비율", "MAX_TRIPS": "축당 상한 (회)", "DRT_WAIT": "DRT 대기 (분)", "COACH_KMPL": "디젤버스 연비 (km/L)", "COACH_CAP": "직행 정원 (석)",
-            "PHI_MAX": "φ 상한", "DETOUR": "직행 차내시간 비율", "ACCESS_DIRECT": "정류장 접근 (분)"}
+            "PHI_MAX": "φ 상한", "DETOUR": "직행 차내시간 비율", "ACCESS_DIRECT": "정류장 접근 (분)",
+            "LOAD": "새 회차 탑승률 상한", "CAR_OCC": "승용차 재차인원 (명)", "PT_KM_SCALE": "평택→화성 축 길이 배율"}
     df = pd.DataFrame(sens)
     XL = (min(df.base_t.min(), df.ours_t.min()) - 150, max(df.ours_t.max(), df.base_t.max()) + 150)
     keys = list(NAME)
@@ -327,4 +329,7 @@ def fig6():
 if __name__ == "__main__":
     which = sys.argv[1:] or ["1", "2", "3", "4", "5", "6"]
     for w in which:
-        globals()[f"fig{w}"]()
+        try:
+            globals()[f"fig{w}"]()
+        except FileNotFoundError as e:   # 그림1은 행정동 경계 geojson(data/)이 있어야 함
+            print(f"fig{w} 건너뜀: {e}")

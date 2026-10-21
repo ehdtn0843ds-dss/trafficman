@@ -8,7 +8,7 @@
 
 ## 한 줄 요약
 
-경기도가 2030년까지 늘리는 편하G버스 100회(출근 50 + 퇴근 50)를 **PCTR이 높은 경기 내부 산업단지 축**에 배치하면 연 약 1,020 tCO₂가 줄어든다. 지금처럼 기존 노선에 비례해 늘리면 오히려 연 약 790 t이 늘어난다. 입력값 11개를 근거 범위 끝까지 바꿔도 두 결과의 범위는 겹치지 않았다.
+경기도가 2030년까지 늘리는 편하G버스 100회(출근 50 + 퇴근 50)를 **PCTR이 높은 경기 내부 산업단지 축**에 배치하면, 입력 14개를 하나씩 범위 끝으로 바꿔도 지금처럼 기존 노선에 비례해 늘리는 방식보다 늘 연 770 t 이상 덜 배출한다. 절대 감축은 새 승객 중 승용차 출신 비율 φ가 손익분기 0.26(44석 만석)을 넘을 때 생긴다: φ 0.5면 연 약 1,020 t 감축, 0.26이면 약 0, 비관 조합에서는 증편 보류(0 t). 현행 방식은 연 약 790 t(205~1,101 t) 증가.
 
 ## 방법 개요
 
@@ -21,24 +21,26 @@
 | ⑤ 탄소 손익분기 | 도로 부하식 + 윌런스 선 연료 모델, N* = (C₀ + r·C_dh)/(φ·c_car − c_pax) | `pctr_commute/breakeven.py` |
 | ⑥ 증편 배분 | 수요 D = κ·Q·[(P_old − P_new)⁺ + θ(1 − P_old)], 현행 편하G 실적으로 κ·B 보정, 출근 50회 그리디 배분, 민감도 11개 입력 | `axis_model.py`, `sensitivity.py` |
 
-차량은 현대자동차 공식 제원(2026 카탈로그·가격표)을 기준으로 했다: 유니버스 디젤 44석(직행), 유니버스 수소전기버스 45인승(무공해 대안), 쏠라티 13인승(DRT, 똑버스 운영 사양), 쏘나타 2.0(승용차). 현대는 유니버스 디젤과 쏠라티의 공인연비·공차중량을 공개하지 않아 국내 실측·보고값으로 대신했다(보고서 표1, `sources/` 참고).
+차량은 현대자동차 공식 제원(2026 카탈로그·가격표)을 기준으로 했다: 유니버스 디젤 44석(직행, 편하G 허용 좌석형 최대), 유니버스 수소전기버스 45인승(무공해 대안), 쏠라티 13인승(DRT, 똑버스 운영 사양), 쏘나타 2.0(승용차). 현대는 유니버스 디젤과 쏠라티의 공인연비·공차중량을 공개하지 않아 국내 실측·보고값으로 대신했다(보고서 표1, `sources/` 참고).
 
 ## 재현
 
 ```bash
-pip install pandas numpy scipy matplotlib
+pip install pandas numpy scipy matplotlib      # 그림 글꼴: fonts/ (Pretendard, SIL OFL 1.1)
 cd pctr_commute
 python3 fit_beta.py        # β = 3.204 재현
 python3 breakeven.py --out be_result4   # 차량 보정 효율·손익분기 표
 python3 axis_model.py      # 진단·배분 → result/allocation.json, result/axes_classified.csv
 python3 sensitivity.py     # 민감도 → result/sensitivity.json
 cd ../report
-python3 make_figs.py       # 그림 1~6 (그림1은 행정동 경계 geojson을 data/에 두어야 함)
-node make_pdf.js "$PWD/report.html" "$PWD/out.pdf"   # Playwright 필요
+python3 make_figs.py       # 그림 1~6 (그림1은 vuski/admdongkor의 HangJeongDong_ver20260701.geojson을 data/에 두어야 하며, 없으면 건너뜀)
+npm i playwright && npx playwright install chromium
+node make_pdf.js "$PWD/report.html" "$PWD/out.pdf"   # 수식은 report/mathjax(MathJax 3 tex-svg), 글꼴은 report/fonts 사용
 ```
 
 - `resid/od_results.json`: 출발점 55곳 × 목적지 조합과 현행 노선의 통행시간(승용차: 카카오모빌리티 미래 운행 정보 길찾기 API, 대중교통: 카카오맵 길찾기 웹 화면 조회 값). `resid/aggregate.py`가 이를 인구가중 PCTR로 집계한다.
-- 새로 측정하려면 `apimeasure/jobs.txt`(127쌍 좌표)로 각자 발급한 키를 써서 조회한 뒤 `apimeasure/run_all.sh <대중교통 결과 폴더>`를 실행한다. **API 키와 API 원본 응답은 저장소에 넣지 않았다.**
+- 새로 측정하려면: ① `KAKAO_REST_KEY=<키> python3 apimeasure/measure_car_kakao.py` 로 `car_api.json` 생성(평일 08:00 출발 예측), ② 카카오맵 등으로 같은 127쌍의 대중교통 시간을 조회해 `{"key","tt","walk","xfer","trkm"}` JSON을 한 폴더에 저장, ③ `apimeasure/run_all.sh <그 폴더>`. 입력 형식은 `apimeasure/build_inputs.py` 머리말에 있다. **API 키와 API 원본 응답은 저장소에 넣지 않았다.** `od_results.json`의 `now`는 따로 재지 않아 `peak`와 같은 값이다.
+- 대중교통 시간은 시각표·첨두 혼잡을 반영하지 않는 시간대 무관 대표값이다(낮·밤 조회값 동일).
 - 대중교통 시간 검증: ODsay API 29쌍과 비교, 상관계수 0.78, 소요시간 비율 중앙값 1.02 (`apimeasure/odsay_validation.json`).
 
 ## 폴더
@@ -47,7 +49,8 @@ node make_pdf.js "$PWD/report.html" "$PWD/out.pdf"   # Playwright 필요
 pctr_commute/   모델 코드, 인구총조사 정리본(census/), 결과(result/), 손익분기 결과(be_result4/)
 resid/          행정동 대표점, 통행시간 측정값, 인구가중 집계
 apimeasure/     측정 대상 좌표(jobs.txt, coords.json), 입력 생성·전체 실행 스크립트
-report/         보고서 HTML·PDF, 그림 스크립트, 그림
+report/         보고서 HTML·PDF, 그림 스크립트, 그림, PDF용 글꼴(fonts/)·MathJax
+fonts/          그림용 Pretendard TTF (SIL OFL 1.1)
 data/           국민연금 직장·거주지 이동 데이터(2025-12), KOSIS DT_1PA2004(2020)
 sources/        입력값 근거 조사 기록(차량 제원, 수요·운영 파라미터)
 ```

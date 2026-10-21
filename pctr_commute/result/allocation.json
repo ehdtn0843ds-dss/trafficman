@@ -1,7 +1,7 @@
 {
   "ours": {
     "trips": 100,
-    "riders": 2200,
+    "riders": 2200.0,
     "car_shift": 1100.0,
     "kg_day": 4164.529058218792,
     "t_year": 1020.309619263604
@@ -165,6 +165,9 @@
     "TARGET_RIDE": 19.5,
     "TARGET_PHI": 0.25,
     "PLAN_TRIPS": 100,
+    "LOAD": 1.0,
+    "CAR_OCC": 1.1,
+    "PT_KM_SCALE": 1.0,
     "COACH_KMPL": 3.49,
     "COACH_CAP": 44,
     "VAN_KMPL": 8.0,

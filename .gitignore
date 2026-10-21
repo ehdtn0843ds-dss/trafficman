@@ -1,5 +1,4 @@
 __pycache__/
 *.pyc
 resid/aggregate_log.txt
-fonts/
 data/*.geojson

@@ -1,4 +1,4 @@
-const { chromium } = require('/tmp/claude-0/-home-claude/bef8e7e4-c8b8-5e30-a6a4-d0901e534805/scratchpad/node_modules/playwright');
+const { chromium } = require('playwright');
 (async () => {
   const exe = require('fs').readdirSync('/opt/pw-browsers').find(d=>d.startsWith('chromium_headless_shell'));
   const sub = require('fs').readdirSync('/opt/pw-browsers/'+exe).find(d=>d.startsWith('chrome'));

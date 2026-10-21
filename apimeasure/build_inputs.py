@@ -1,5 +1,10 @@
-"""API 승용차 시간 + 수기 대중교통 시간 → resid/od_results.json(주거지 100쌍), pctr_commute/pctr/easygbus_lookup.json(현행 27+1노선)
-사용: python build_inputs.py <수기 조회 JSON 폴더(ArtifactData out_dir)/transit>"""
+"""카카오모빌리티 API 승용차 시간 + 카카오맵 웹 조회 대중교통 시간 → resid/od_results.json(주거지 100쌍), pctr_commute/pctr/easygbus_lookup.json(현행 27+1노선)
+사용: python build_inputs.py <대중교통 조회 JSON 폴더>
+입력 형식
+  apimeasure/car_api.json : {"source": "...", "car": {"<key>": {"T_car": 분, "car_km": km}, ...}}   (measure_car_kakao.py가 생성)
+  <폴더>/*.json            : {"key": "<key>", "tt": 총 소요(분), "walk": 도보(분), "xfer": 환승 횟수, "trkm": 경로 거리(km)}
+  key = jobs.txt의 첫 칸 (주거지 쌍 "시|동|목적지", 현행 노선 "P####")
+od_results.json의 now는 별도로 재지 않아 peak(08:00 예측)와 같은 값을 넣었다."""
 import json, sys, glob, os, csv
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,7 +16,7 @@ for f in glob.glob(os.path.join(sys.argv[1], "*.json")):
     if d.get("tt") is not None and d.get("walk") is not None and d.get("xfer") is not None:
         man[d["key"]] = d
 miss = [k for k in car if k not in man]
-print("수기 입력", len(man), "/", len(car), "누락", miss[:10])
+print("대중교통 조회", len(man), "/", len(car), "누락", miss[:10])
 od = {}
 for k, c in car.items():
     if "|" not in k or k not in man: continue
