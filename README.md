@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <img alt="공모전" src="https://img.shields.io/badge/숲과나눔×한겨레-AI_교통_데이터_분석_공모전-1E2830">
-  <img alt="팀" src="https://img.shields.io/badge/팀-버스타G-EB6834">
-  <img alt="Python" src="https://img.shields.io/badge/Python-pandas%20·%20numpy%20·%20matplotlib-2A78D6">
+  <img alt="공모전" src="https://img.shields.io/badge/%EC%88%B2%EA%B3%BC%EB%82%98%EB%88%94%C3%97%ED%95%9C%EA%B2%A8%EB%A0%88-AI_%EA%B5%90%ED%86%B5_%EB%8D%B0%EC%9D%B4%ED%84%B0_%EB%B6%84%EC%84%9D_%EA%B3%B5%EB%AA%A8%EC%A0%84-1E2830">
+  <img alt="팀" src="https://img.shields.io/badge/%ED%8C%80-%EB%B2%84%EC%8A%A4%ED%83%80G-EB6834">
+  <img alt="Python" src="https://img.shields.io/badge/Python-pandas%20%C2%B7%20numpy%20%C2%B7%20matplotlib-2A78D6">
 </p>
 
 <table align="center">
@@ -128,7 +128,7 @@ PCTR이 1보다 작으면 대중교통이 더 빠르고, 2라면 대중교통이
 
 <sub>단위 tCO₂/년, 값은 "PCTR 기준 / 같은 조건의 현행 방식"이에요.</sub>
 
-이 표에서 솔직하게 말씀드릴 점이 있어요. 탑승과 φ가 같다면 오히려 현행 방식의 절댓값이 더 커요(노선이 더 길어서요). 결국 PCTR 기준이 유리한 이유는 **"대중교통이 느린 축일수록 승용차 출신 승객이 많고 더 많이 탄다"**는 가설 하나예요.
+이 표에서 솔직하게 말씀드릴 점이 있어요. 탑승과 φ가 같다면 오히려 현행 방식의 절댓값이 더 커요(노선이 더 길어서요). 결국 PCTR 기준이 유리한 이유는 <b>"대중교통이 느린 축일수록 승용차 출신 승객이 많고 더 많이 탄다"</b>는 가설 하나예요.
 
 그래서 이 가설을 세 가지로 점검했어요.
 
