@@ -1,0 +1,531 @@
+[
+ {
+  "param": "THETA",
+  "value": 0.05,
+  "ours_t": 1020.3,
+  "base_t": -775.6,
+  "ours_shift": 1100,
+  "base_shift": 252,
+  "kappa": 0.244,
+  "bonus": 7.4,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "THETA",
+  "value": 0.1,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "THETA",
+  "value": 0.15,
+  "ours_t": 1020.3,
+  "base_t": -810.8,
+  "ours_shift": 1100,
+  "base_shift": 255,
+  "kappa": 0.088,
+  "bonus": 13.0,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "TARGET_PHI",
+  "value": 0.17,
+  "ours_t": 1020.3,
+  "base_t": -995.6,
+  "ours_shift": 1100,
+  "base_shift": 176,
+  "kappa": 0.154,
+  "bonus": 6.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "TARGET_PHI",
+  "value": 0.25,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "TARGET_PHI",
+  "value": 0.26,
+  "ours_t": 1020.3,
+  "base_t": -768.4,
+  "ours_shift": 1100,
+  "base_shift": 266,
+  "kappa": 0.127,
+  "bonus": 11.0,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "TARGET_RIDE",
+  "value": 18.0,
+  "ours_t": 1020.3,
+  "base_t": -833.5,
+  "ours_shift": 1100,
+  "base_shift": 239,
+  "kappa": 0.117,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "TARGET_RIDE",
+  "value": 19.5,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "TARGET_RIDE",
+  "value": 21.0,
+  "ours_t": 1020.3,
+  "base_t": -748.3,
+  "ours_shift": 1100,
+  "base_shift": 273,
+  "kappa": 0.143,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "R_DH",
+  "value": 0.5,
+  "ours_t": 1239.9,
+  "base_t": -498.6,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "R_DH",
+  "value": 1.0,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "MAX_TRIPS",
+  "value": 9,
+  "ours_t": 831.2,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "화성시→수원시 영통구",
+   "시흥시→안산시 단원구",
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "안산시→시흥시"
+  ]
+ },
+ {
+  "param": "MAX_TRIPS",
+  "value": 15,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "MAX_TRIPS",
+  "value": 20,
+  "ours_t": 1110.6,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시"
+  ]
+ },
+ {
+  "param": "DRT_WAIT",
+  "value": 5.6,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "DRT_WAIT",
+  "value": 14.0,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "DRT_WAIT",
+  "value": 16.5,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "COACH_KMPL",
+  "value": 2.83,
+  "ours_t": 779.8,
+  "base_t": -1101.4,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "COACH_KMPL",
+  "value": 3.49,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "COACH_KMPL",
+  "value": 4.0,
+  "ours_t": 1151.8,
+  "base_t": -623.9,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "COACH_CAP",
+  "value": 28,
+  "ours_t": 282.8,
+  "base_t": -871.7,
+  "ours_shift": 700,
+  "base_shift": 211,
+  "kappa": 0.212,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "COACH_CAP",
+  "value": 41,
+  "ours_t": 882.0,
+  "base_t": -791.4,
+  "ours_shift": 1025,
+  "base_shift": 253,
+  "kappa": 0.133,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "COACH_CAP",
+  "value": 44,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "COACH_CAP",
+  "value": 45,
+  "ours_t": 1066.4,
+  "base_t": -791.9,
+  "ours_shift": 1125,
+  "base_shift": 257,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "PHI_MAX",
+  "value": 0.4,
+  "ours_t": 600.9,
+  "base_t": -792.8,
+  "ours_shift": 880,
+  "base_shift": 252,
+  "kappa": 0.116,
+  "bonus": 13.2,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "PHI_MAX",
+  "value": 0.5,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "PHI_MAX",
+  "value": 0.6,
+  "ours_t": 1439.7,
+  "base_t": -812.9,
+  "ours_shift": 1320,
+  "base_shift": 256,
+  "kappa": 0.137,
+  "bonus": 9.5,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "DETOUR",
+  "value": 0.85,
+  "ours_t": 1020.3,
+  "base_t": -764.7,
+  "ours_shift": 1100,
+  "base_shift": 254,
+  "kappa": 0.131,
+  "bonus": -0.1,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "DETOUR",
+  "value": 1.0,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "DETOUR",
+  "value": 1.15,
+  "ours_t": 1020.3,
+  "base_t": -813.2,
+  "ours_shift": 1100,
+  "base_shift": 257,
+  "kappa": 0.128,
+  "bonus": 21.8,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "ACCESS_DIRECT",
+  "value": 7,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 7.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "ACCESS_DIRECT",
+  "value": 10,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 10.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ },
+ {
+  "param": "ACCESS_DIRECT",
+  "value": 15,
+  "ours_t": 1020.3,
+  "base_t": -792.7,
+  "ours_shift": 1100,
+  "base_shift": 256,
+  "kappa": 0.129,
+  "bonus": 15.6,
+  "axes": [
+   "고양시→파주시",
+   "평택시→화성시",
+   "안산시→화성시",
+   "화성시→수원시 영통구"
+  ]
+ }
+]
