@@ -15,7 +15,7 @@
 | 단계 | 내용 | 코드 |
 |---|---|---|
 | ① 통근 축 | 국민연금 직장·거주지 OD(2025-12)에서 시군 경계를 넘는 1,000명 이상 축 532개 추출, 승용차 통근자 상위 20개 축 선정 | `pctr_commute/build_commute_axes.py`, `census_mode.py` |
-| ② PCTR | 시군별 주민등록 인구 상위 5개 행정동의 주거 대표점(OSM 건물 면적×층수 가중) → 목적지까지 승용차(평일 08:00 출발 예측)·대중교통 시간, 인구가중 평균 | `resid/aggregate.py`, `apimeasure/build_inputs.py` |
+| ② PCTR | 시군별 주민등록 인구 상위 5개 행정동의 주거 대표점(OSM 주거 건물을 면적×층수로 가중한 메도이드: 가중 거리 합이 최소인 실제 건물, 층수 미표기 시 아파트 15층 등 가정) → 목적지까지 승용차(평일 08:00 출발 예측)·대중교통 시간, 인구가중 평균 | `resid/aggregate.py`, `apimeasure/build_inputs.py` |
 | ③ 수단 선택 | 인구총조사 2020 31개 시군: logit(승용차 분담률) = α + β·ln PCTR, 통근자 가중 회귀로 β = 3.20 | `pctr_commute/fit_beta.py`, `axis_model.py` |
 | ④ 진단 | 보류 / 수요관리(PCTR < 1.5) / DRT 연계(도보 ≥ 20분 또는 30%) / 출퇴근 직행 | `axis_model.py` |
 | ⑤ 탄소 손익분기 | 도로 부하식 + 윌런스 선 연료 모델, N* = (C₀ + r·C_dh)/(φ·c_car − c_pax) | `pctr_commute/breakeven.py` |
