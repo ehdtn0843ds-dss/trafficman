@@ -40,7 +40,8 @@ chk = dict(C0=float(np.interp(3.49, KG, tab[:, 0])) - m.VEH["출퇴근 직행"][
            CDH=float(np.interp(3.49, KG, tab[:, 1])) - m.VEH["출퇴근 직행"]["CDH"],
            CPAX=float(np.interp(3.49, KG, tab[:, 2])) - m.VEH["출퇴근 직행"]["CPAX"])
 
-DIST = dict(N_p=("U", 20, 44), phi_p=("U", 0.17, 0.6), N_b=("U", 15, 25), phi_b=("U", 0.15, 0.35),
+# N_b: 2022년 실적 회당 19~22명(28~31석) ~ 2025-11 "출근시간 탑승률 90% 초과" 보도(44석이면 약 40명)
+DIST = dict(N_p=("U", 20, 44), phi_p=("U", 0.17, 0.6), N_b=("U", 15, 40), phi_b=("U", 0.15, 0.35),
             COACH_KMPL=("U", 2.83, 4.0), R_DH=("U", 0.0, 1.0), CAR_OCC=("U", 1.1, 1.4))
 F = 2 * m.WORKDAYS / 1000
 
