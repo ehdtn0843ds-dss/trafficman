@@ -1,0 +1,3530 @@
+{
+ "meta": {
+  "generated_by": "docs/data/build_model_json.py",
+  "note": "모든 수치는 pctr_commute 모델 코드·결과 파일에서 계산/복사. 수치의 정본은 report/report.html.",
+  "units": {
+   "C0": "kgCO2/버스-km (빈 차 1회)",
+   "CDH": "kgCO2/버스-km (회송 1회)",
+   "CPAX": "kgCO2/버스-km/승객",
+   "CCAR": "kgCO2/승용차 통근자 1인-km",
+   "t_year": "tCO2/년(+는 감축, −는 증가)",
+   "km": "km",
+   "T": "분"
+  },
+  "sources": {
+   "constants": "pctr_commute/axis_model.py vehicle_constants() → breakeven.py (25 km 기준 시나리오)",
+   "constants_check": "pctr_commute/result/capture_rate.json constants",
+   "fcev": "pctr_commute/breakeven.py FCEV·CALIB['fcev'] (be_result4/breakeven_table.csv와 같은 계산)",
+   "axes": "pctr_commute/result/axes_classified.csv (+ phi_proxy.json alpha_o, allocation.json alloc_ours)",
+   "axes_demand": "axis_model.service_demand(), 후보 축 수요 = 노선 5개분(N_ROUTE_SLOTS)",
+   "origin_coords": "resid/od_detail.csv (출발 행정동 5곳 주거 대표점, 인구가중 평균)",
+   "dest_coords": "apimeasure/coords.json dest",
+   "routes": "pctr_commute/easygbus_routes.csv, pctr/easygbus_lookup.json, result/phi_proxy_routes.csv, allocation.json alloc_base",
+   "route_coords": "apimeasure/coords.json stops/routes",
+   "scenario_grid": "pctr_commute/result/scenario_grid.json",
+   "montecarlo": "pctr_commute/result/montecarlo.json, montecarlo_draws.npz",
+   "sensitivity": "pctr_commute/result/sensitivity.json, sensitivity_combo.json",
+   "phi_proxy": "pctr_commute/result/phi_proxy.json",
+   "capture_rate": "pctr_commute/result/capture_rate.json",
+   "allocation": "pctr_commute/result/allocation.json"
+  },
+  "missing": {
+   "route_coords": []
+  }
+ },
+ "constants": {
+  "WORKDAYS": 245,
+  "AM_TRIPS": 50,
+  "MAX_TRIPS": 15,
+  "R_DH": 1.0,
+  "CAR_OCC": 1.1,
+  "BETA": 3.2,
+  "COACH_KMPL": 3.49,
+  "COACH_CAP": 44,
+  "LOAD": 1.0,
+  "PHI_MAX": 0.5,
+  "DETOUR": 1.0,
+  "ACCESS_DIRECT": 10,
+  "PT_KM_SCALE": 1.0,
+  "N_ROUTE_SLOTS": 5,
+  "KAPPA": 0.12934962058000327,
+  "BONUS": 10.620813687969182,
+  "TARGET_RIDE": 19.5,
+  "TARGET_PHI": 0.25,
+  "ref_axis_km": 25.0,
+  "car": {
+   "name": "쏘나타 2.0 가솔린",
+   "CCAR_occ1": 0.14621556461776108,
+   "CCAR": 0.13292324056160099,
+   "formula": "CCAR(occ) = CCAR_occ1 / occ (재차인원으로 나누기만, 정확)"
+  },
+  "diesel": {
+   "name": "유니버스 디젤(44석)",
+   "cap": 44,
+   "kmpl": 3.49,
+   "C0": 0.7930749898406633,
+   "CDH": 0.6123345151203781,
+   "CPAX": 0.00218418232664514,
+   "eta": 0.35009896912416516,
+   "kmpl_range_source": [
+    2.83,
+    4.0
+   ],
+   "affine_in_inv_kmpl": {
+    "C0": {
+     "A": 0.08380868843758572,
+     "B": 2.4753393918967403,
+     "max_abs_resid": 3.3306690738754696e-16,
+     "max_rel_resid": 4.947700127435293e-16,
+     "proportional_max_rel_err_2p83_4p0": 0.01976187315933786
+    },
+    "CDH": {
+     "A": -0.0020299330496143207,
+     "B": 2.1441319241132737,
+     "max_abs_resid": 2.220446049250313e-16,
+     "max_rel_resid": 4.210291431851861e-16,
+     "proportional_max_rel_err_2p83_4p0": 0.000607552181993265
+    },
+    "CPAX": {
+     "A": -0.0004228637349146878,
+     "B": 0.009098590754843814,
+     "max_abs_resid": 6.938893903907228e-18,
+     "max_rel_resid": 3.407741532044119e-15,
+     "proportional_max_rel_err_2p83_4p0": 0.03428583275562569
+    }
+   },
+   "formula": "X(kmpl) = A + B/kmpl (X = C0, CDH, CPAX). breakeven.calibrate가 η를 재보정한 결과와 기계 정밀도로 일치",
+   "table": [
+    {
+     "kmpl": 2.8,
+     "C0": 0.96785847,
+     "CDH": 0.76373147,
+     "CPAX": 0.00282663,
+     "eta": 0.2705268,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 2.85,
+     "C0": 0.95234883,
+     "CDH": 0.75029706,
+     "CPAX": 0.00276962,
+     "eta": 0.27609521,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 2.9,
+     "C0": 0.937374,
+     "CDH": 0.7373259,
+     "CPAX": 0.00271458,
+     "eta": 0.28169352,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 2.95,
+     "C0": 0.92290679,
+     "CDH": 0.72479445,
+     "CPAX": 0.0026614,
+     "eta": 0.28732199,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.0,
+     "C0": 0.90892182,
+     "CDH": 0.71268071,
+     "CPAX": 0.00261,
+     "eta": 0.29298085,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.05,
+     "C0": 0.89539537,
+     "CDH": 0.70096414,
+     "CPAX": 0.00256028,
+     "eta": 0.29867036,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.1,
+     "C0": 0.88230527,
+     "CDH": 0.68962553,
+     "CPAX": 0.00251217,
+     "eta": 0.30439076,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.15,
+     "C0": 0.86963072,
+     "CDH": 0.67864687,
+     "CPAX": 0.00246558,
+     "eta": 0.31014231,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.2,
+     "C0": 0.85735225,
+     "CDH": 0.66801129,
+     "CPAX": 0.00242045,
+     "eta": 0.31592526,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.25,
+     "C0": 0.84545158,
+     "CDH": 0.65770297,
+     "CPAX": 0.0023767,
+     "eta": 0.32173986,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.3,
+     "C0": 0.83391153,
+     "CDH": 0.64770701,
+     "CPAX": 0.00233428,
+     "eta": 0.32758639,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.35,
+     "C0": 0.82271597,
+     "CDH": 0.63800945,
+     "CPAX": 0.00229313,
+     "eta": 0.33346509,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.4,
+     "C0": 0.81184969,
+     "CDH": 0.6285971,
+     "CPAX": 0.00225319,
+     "eta": 0.33937625,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.45,
+     "C0": 0.80129837,
+     "CDH": 0.61945758,
+     "CPAX": 0.00221441,
+     "eta": 0.34532013,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.5,
+     "C0": 0.79104851,
+     "CDH": 0.61057919,
+     "CPAX": 0.00217673,
+     "eta": 0.351297,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.55,
+     "C0": 0.78108739,
+     "CDH": 0.60195089,
+     "CPAX": 0.00214012,
+     "eta": 0.35730713,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.6,
+     "C0": 0.77140296,
+     "CDH": 0.59356227,
+     "CPAX": 0.00210452,
+     "eta": 0.36335081,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.65,
+     "C0": 0.76198386,
+     "CDH": 0.58540347,
+     "CPAX": 0.0020699,
+     "eta": 0.36942831,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.7,
+     "C0": 0.75281933,
+     "CDH": 0.57746518,
+     "CPAX": 0.00203621,
+     "eta": 0.37553993,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.75,
+     "C0": 0.74389919,
+     "CDH": 0.56973858,
+     "CPAX": 0.00200343,
+     "eta": 0.38168595,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.8,
+     "C0": 0.73521379,
+     "CDH": 0.56221531,
+     "CPAX": 0.0019715,
+     "eta": 0.38786665,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.85,
+     "C0": 0.72675399,
+     "CDH": 0.55488745,
+     "CPAX": 0.00194041,
+     "eta": 0.39408235,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.9,
+     "C0": 0.7185111,
+     "CDH": 0.54774748,
+     "CPAX": 0.00191011,
+     "eta": 0.40033332,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 3.95,
+     "C0": 0.71047689,
+     "CDH": 0.54078828,
+     "CPAX": 0.00188058,
+     "eta": 0.40661988,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 4.0,
+     "C0": 0.70264354,
+     "CDH": 0.53400305,
+     "CPAX": 0.00185178,
+     "eta": 0.41294233,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 4.05,
+     "C0": 0.6950036,
+     "CDH": 0.52738536,
+     "CPAX": 0.0018237,
+     "eta": 0.41930098,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 4.1,
+     "C0": 0.68755,
+     "CDH": 0.52092907,
+     "CPAX": 0.0017963,
+     "eta": 0.42569613,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 4.15,
+     "C0": 0.68027601,
+     "CDH": 0.51462836,
+     "CPAX": 0.00176957,
+     "eta": 0.43212811,
+     "CCAR_occ1": 0.14621556
+    },
+    {
+     "kmpl": 4.2,
+     "C0": 0.67317521,
+     "CDH": 0.50847767,
+     "CPAX": 0.00174347,
+     "eta": 0.43859724,
+     "CCAR_occ1": 0.14621556
+    }
+   ]
+  },
+  "fcev": {
+   "name": "유니버스 수소버스(45인승)",
+   "cap": 44,
+   "kmpkg": 28.0,
+   "h2_co2_per_kg": 9.2,
+   "C0": 0.3802369410027295,
+   "CDH": 0.35924166094368654,
+   "CPAX": 0.0015161616912504818,
+   "eta": 0.5246242915643862,
+   "affine_in_inv_kmpkg": {
+    "C0": {
+     "A": 0.03832039737825875,
+     "B": 9.57366322148518,
+     "max_abs_resid": 3.3306690738754696e-16,
+     "max_rel_resid": 6.442255608152376e-16
+    },
+    "CDH": {
+     "A": 0.01790436545116293,
+     "B": 9.55744427379066,
+     "max_abs_resid": 1.6653345369377348e-16,
+     "max_rel_resid": 4.3199521468732196e-16
+    },
+    "CPAX": {
+     "A": -2.7520141668216133e-05,
+     "B": 0.04322309132172347,
+     "max_abs_resid": 4.119968255444917e-18,
+     "max_rel_resid": 2.6186209633052315e-15
+    }
+   },
+   "formula": "X(kmpkg) ≈ A + B/kmpkg; 수소 배출계수 h2(kgCO2/kgH2)를 바꾸면 X × h2/9.2 (정확)",
+   "table": [
+    {
+     "kmpkg": 20.0,
+     "C0": 0.51700356,
+     "CDH": 0.49577658,
+     "CPAX": 0.00213363,
+     "eta": 0.37285815
+    },
+    {
+     "kmpkg": 21.0,
+     "C0": 0.49420912,
+     "CDH": 0.47302076,
+     "CPAX": 0.00203072,
+     "eta": 0.39174588
+    },
+    {
+     "kmpkg": 22.0,
+     "C0": 0.47348691,
+     "CDH": 0.45233365,
+     "CPAX": 0.00193717,
+     "eta": 0.41065724
+    },
+    {
+     "kmpkg": 23.0,
+     "C0": 0.45456662,
+     "CDH": 0.43344542,
+     "CPAX": 0.00185174,
+     "eta": 0.42959229
+    },
+    {
+     "kmpkg": 24.0,
+     "C0": 0.43722303,
+     "CDH": 0.41613121,
+     "CPAX": 0.00177344,
+     "eta": 0.44855106
+    },
+    {
+     "kmpkg": 25.0,
+     "C0": 0.42126693,
+     "CDH": 0.40020214,
+     "CPAX": 0.0017014,
+     "eta": 0.4675336
+    },
+    {
+     "kmpkg": 26.0,
+     "C0": 0.40653821,
+     "CDH": 0.38549838,
+     "CPAX": 0.00163491,
+     "eta": 0.48653995
+    },
+    {
+     "kmpkg": 27.0,
+     "C0": 0.39290052,
+     "CDH": 0.37188378,
+     "CPAX": 0.00157334,
+     "eta": 0.50557017
+    },
+    {
+     "kmpkg": 28.0,
+     "C0": 0.38023694,
+     "CDH": 0.35924166,
+     "CPAX": 0.00151616,
+     "eta": 0.52462429
+    },
+    {
+     "kmpkg": 29.0,
+     "C0": 0.36844672,
+     "CDH": 0.34747141,
+     "CPAX": 0.00146293,
+     "eta": 0.54370236
+    },
+    {
+     "kmpkg": 30.0,
+     "C0": 0.3574425,
+     "CDH": 0.33648584,
+     "CPAX": 0.00141325,
+     "eta": 0.56280443
+    },
+    {
+     "kmpkg": 31.0,
+     "C0": 0.34714824,
+     "CDH": 0.32620902,
+     "CPAX": 0.00136677,
+     "eta": 0.58193054
+    },
+    {
+     "kmpkg": 32.0,
+     "C0": 0.33749737,
+     "CDH": 0.3165745,
+     "CPAX": 0.0013232,
+     "eta": 0.60108073
+    },
+    {
+     "kmpkg": 33.0,
+     "C0": 0.3284314,
+     "CDH": 0.30752389,
+     "CPAX": 0.00128227,
+     "eta": 0.62025506
+    },
+    {
+     "kmpkg": 34.0,
+     "C0": 0.31989873,
+     "CDH": 0.29900567,
+     "CPAX": 0.00124375,
+     "eta": 0.63945356
+    },
+    {
+     "kmpkg": 35.0,
+     "C0": 0.31185363,
+     "CDH": 0.2909742,
+     "CPAX": 0.00120743,
+     "eta": 0.65867629
+    },
+    {
+     "kmpkg": 36.0,
+     "C0": 0.30425549,
+     "CDH": 0.28338893,
+     "CPAX": 0.00117312,
+     "eta": 0.67792328
+    }
+   ]
+  },
+  "breakeven_check": {
+   "diesel_phi1": 10.7497,
+   "diesel_phi05": 21.8647,
+   "diesel_phi025": 45.2677,
+   "fcev_phi025": 23.3166
+  },
+  "mstar": {
+   "19.5": 10.89,
+   "20": 10.9,
+   "30": 11.07,
+   "44": 11.3
+  },
+  "phi_needed": {
+   "19.5": 0.559,
+   "20": 0.545,
+   "30": 0.369,
+   "44": 0.257
+  },
+  "alpha_o": {
+   "가평군": -1.6601,
+   "고양시": -0.3823,
+   "과천시": -1.2457,
+   "광명시": -1.1978,
+   "광주시": -0.84,
+   "구리시": -1.1535,
+   "군포시": -1.1414,
+   "김포시": -0.9423,
+   "남양주시": 1.0196,
+   "동두천시": -1.8424,
+   "부천시": -1.32,
+   "성남시": 0.0819,
+   "수원시": -0.9337,
+   "시흥시": -1.1509,
+   "안산시": -2.0238,
+   "안성시": -0.6445,
+   "안양시": -1.1247,
+   "양주시": -1.3691,
+   "양평군": -1.0169,
+   "여주시": -0.9299,
+   "연천군": -1.3774,
+   "오산시": -2.0782,
+   "용인시": 0.5105,
+   "의왕시": -1.0941,
+   "의정부시": -1.2482,
+   "이천시": -1.2005,
+   "파주시": 0.1889,
+   "평택시": -2.4562,
+   "포천시": -0.941,
+   "하남시": -0.9958,
+   "화성시": -0.5051
+  }
+ },
+ "model_base": {
+  "ours": {
+   "alloc": {
+    "화성시→수원시 영통구": 5,
+    "고양시→파주시": 15,
+    "평택시→화성시": 15,
+    "안산시→화성시": 15
+   },
+   "trips": 100,
+   "riders": 2200.0,
+   "car_shift": 1100.0,
+   "t_year": 1020.31,
+   "N": 44,
+   "phi": 0.5
+  },
+  "base": {
+   "alloc": {
+    "P7001": 1,
+    "P8001": 2,
+    "P9801": 1,
+    "P9701": 2,
+    "P9501": 2,
+    "P9110": 2,
+    "P5342": 2,
+    "P9530": 2,
+    "P9540": 1,
+    "P9541": 2,
+    "P9601": 1,
+    "P9602": 1,
+    "P9603": 2,
+    "P9604": 2,
+    "P9201": 2,
+    "P9211": 2,
+    "P9242": 2,
+    "P9243": 2,
+    "P9901": 2,
+    "P9902": 2,
+    "P9401": 2,
+    "P9402": 2,
+    "P9404": 2,
+    "P8101": 2,
+    "P9301": 2,
+    "P9302": 2,
+    "P9303": 2,
+    "P9304": 1
+   },
+   "trips": 100,
+   "riders": 1032.47,
+   "car_shift": 255.89,
+   "transit_shift": 776.59,
+   "t_year": -792.7,
+   "N": 19.5,
+   "phi": 0.25
+  },
+  "note": "ours: 후보 9축 수요(D, φ) 모형에서 출근 50회 그리디(축당 15회 상한) / base: 현행 28개 노선에 현재 출근 운행 비율로 50회(최대잔여법). 퇴근 대칭 ×2, 245일"
+ },
+ "axes": [
+  {
+   "id": 0,
+   "key": "화성시→수원시 영통구",
+   "origin": "화성시",
+   "dest_sgg": "수원시 영통구",
+   "dest": "삼성디지털시티",
+   "seoul": false,
+   "car_km": 19.4,
+   "T_car": 40.6,
+   "T_transit": 74.2,
+   "walk": 28.4,
+   "xfer": 0.68,
+   "PCTR": 1.825,
+   "PCTR_min": 1.47,
+   "PCTR_max": 2.53,
+   "n_pts": 5,
+   "diag": "DRT 연계",
+   "Q_od": 41524,
+   "Q_car": 33441,
+   "alpha_o": -0.5051,
+   "phi_proxy": 0.805,
+   "bus_candidate": true,
+   "service": "출퇴근 직행",
+   "model_D_day": 12352.39595,
+   "model_phi": 0.5,
+   "model_km": 19.4,
+   "T_new_bus": 50.6,
+   "alloc_am": 5,
+   "alloc_t_year": 67.6,
+   "origin_lat": 37.18283,
+   "origin_lon": 126.97842,
+   "origin_points": [
+    {
+     "dong": "봉담읍",
+     "pop": 112861,
+     "lat": 37.22257,
+     "lon": 126.95679
+    },
+    {
+     "dong": "향남읍",
+     "pop": 84621,
+     "lat": 37.12416,
+     "lon": 126.91744
+    },
+    {
+     "dong": "동탄9동",
+     "pop": 61708,
+     "lat": 37.18465,
+     "lon": 127.12658
+    },
+    {
+     "dong": "남양읍",
+     "pop": 60607,
+     "lat": 37.20036,
+     "lon": 126.82376
+    },
+    {
+     "dong": "동탄7동",
+     "pop": 57512,
+     "lat": 37.17073,
+     "lon": 127.11463
+    }
+   ],
+   "dest_lat": 37.25729,
+   "dest_lon": 127.05209
+  },
+  {
+   "id": 1,
+   "key": "수원시→화성시",
+   "origin": "수원시",
+   "dest_sgg": "화성시",
+   "dest": "삼성화성캠퍼스",
+   "seoul": false,
+   "car_km": 12.7,
+   "T_car": 33.5,
+   "T_transit": 61.3,
+   "walk": 21.0,
+   "xfer": 0.61,
+   "PCTR": 1.832,
+   "PCTR_min": 1.78,
+   "PCTR_max": 2.0,
+   "n_pts": 5,
+   "diag": "DRT 연계",
+   "Q_od": 38726,
+   "Q_car": 28339,
+   "alpha_o": -0.9337,
+   "phi_proxy": 0.732,
+   "bus_candidate": true,
+   "service": "출퇴근 직행",
+   "model_D_day": 12231.954979,
+   "model_phi": 0.5,
+   "model_km": 12.7,
+   "T_new_bus": 43.5,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.27137,
+   "origin_lon": 127.02307,
+   "origin_points": [
+    {
+     "dong": "광교1동",
+     "pop": 53856,
+     "lat": 37.29105,
+     "lon": 127.0524
+    },
+    {
+     "dong": "권선2동",
+     "pop": 46028,
+     "lat": 37.24741,
+     "lon": 127.02711
+    },
+    {
+     "dong": "원천동",
+     "pop": 45639,
+     "lat": 37.27269,
+     "lon": 127.05975
+    },
+    {
+     "dong": "인계동",
+     "pop": 45208,
+     "lat": 37.26992,
+     "lon": 127.02578
+    },
+    {
+     "dong": "금곡동",
+     "pop": 44160,
+     "lat": 37.27248,
+     "lon": 126.94243
+    }
+   ],
+   "dest_lat": 37.21853,
+   "dest_lon": 127.06596
+  },
+  {
+   "id": 2,
+   "key": "용인시→성남시 분당구",
+   "origin": "용인시",
+   "dest_sgg": "성남시 분당구",
+   "dest": "정자역",
+   "seoul": false,
+   "car_km": 7.8,
+   "T_car": 26.7,
+   "T_transit": 27.0,
+   "walk": 12.6,
+   "xfer": 0.82,
+   "PCTR": 1.01,
+   "PCTR_min": 0.72,
+   "PCTR_max": 1.52,
+   "n_pts": 5,
+   "diag": "수요관리",
+   "Q_od": 31559,
+   "Q_car": 19957,
+   "alpha_o": 0.5105,
+   "phi_proxy": 0.632,
+   "bus_candidate": false,
+   "service": null,
+   "model_D_day": null,
+   "model_phi": null,
+   "model_km": null,
+   "T_new_bus": null,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.31601,
+   "origin_lon": 127.08816,
+   "origin_points": [
+    {
+     "dong": "성복동",
+     "pop": 54505,
+     "lat": 37.31683,
+     "lon": 127.07117
+    },
+    {
+     "dong": "동천동",
+     "pop": 50731,
+     "lat": 37.33682,
+     "lon": 127.09308
+    },
+    {
+     "dong": "풍덕천2동",
+     "pop": 41152,
+     "lat": 37.31899,
+     "lon": 127.08935
+    },
+    {
+     "dong": "신봉동",
+     "pop": 40946,
+     "lat": 37.3266,
+     "lon": 127.07417
+    },
+    {
+     "dong": "구갈동",
+     "pop": 39845,
+     "lat": 37.27442,
+     "lon": 127.11827
+    }
+   ],
+   "dest_lat": 37.36644,
+   "dest_lon": 127.10827
+  },
+  {
+   "id": 3,
+   "key": "용인시→서울 강남구",
+   "origin": "용인시",
+   "dest_sgg": "서울 강남구",
+   "dest": "강남역",
+   "seoul": true,
+   "car_km": 27.2,
+   "T_car": 68.3,
+   "T_transit": 40.8,
+   "walk": 8.6,
+   "xfer": 1.0,
+   "PCTR": 0.598,
+   "PCTR_min": 0.49,
+   "PCTR_max": 0.74,
+   "n_pts": 5,
+   "diag": "수요관리",
+   "Q_od": 30262,
+   "Q_car": 7362,
+   "alpha_o": 0.5105,
+   "phi_proxy": 0.243,
+   "bus_candidate": false,
+   "service": null,
+   "model_D_day": null,
+   "model_phi": null,
+   "model_km": null,
+   "T_new_bus": null,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.31601,
+   "origin_lon": 127.08816,
+   "origin_points": [
+    {
+     "dong": "성복동",
+     "pop": 54505,
+     "lat": 37.31683,
+     "lon": 127.07117
+    },
+    {
+     "dong": "동천동",
+     "pop": 50731,
+     "lat": 37.33682,
+     "lon": 127.09308
+    },
+    {
+     "dong": "풍덕천2동",
+     "pop": 41152,
+     "lat": 37.31899,
+     "lon": 127.08935
+    },
+    {
+     "dong": "신봉동",
+     "pop": 40946,
+     "lat": 37.3266,
+     "lon": 127.07417
+    },
+    {
+     "dong": "구갈동",
+     "pop": 39845,
+     "lat": 37.27442,
+     "lon": 127.11827
+    }
+   ],
+   "dest_lat": 37.49795,
+   "dest_lon": 127.02762
+  },
+  {
+   "id": 4,
+   "key": "시흥시→안산시 단원구",
+   "origin": "시흥시",
+   "dest_sgg": "안산시 단원구",
+   "dest": "반월산단",
+   "seoul": false,
+   "car_km": 14.2,
+   "T_car": 34.2,
+   "T_transit": 55.7,
+   "walk": 14.9,
+   "xfer": 1.63,
+   "PCTR": 1.628,
+   "PCTR_min": 1.45,
+   "PCTR_max": 2.15,
+   "n_pts": 5,
+   "diag": "출퇴근 직행",
+   "Q_od": 23091,
+   "Q_car": 13872,
+   "alpha_o": -1.1509,
+   "phi_proxy": 0.601,
+   "bus_candidate": true,
+   "service": "출퇴근 직행",
+   "model_D_day": 6136.377428,
+   "model_phi": 0.5,
+   "model_km": 14.2,
+   "T_new_bus": 44.2,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.40411,
+   "origin_lon": 126.79227,
+   "origin_points": [
+    {
+     "dong": "은행동",
+     "pop": 57462,
+     "lat": 37.43864,
+     "lon": 126.80082
+    },
+    {
+     "dong": "장곡동",
+     "pop": 46752,
+     "lat": 37.37827,
+     "lon": 126.78667
+    },
+    {
+     "dong": "대야동",
+     "pop": 42451,
+     "lat": 37.44567,
+     "lon": 126.79223
+    },
+    {
+     "dong": "목감동",
+     "pop": 40558,
+     "lat": 37.37702,
+     "lon": 126.85384
+    },
+    {
+     "dong": "배곧2동",
+     "pop": 35398,
+     "lat": 37.36337,
+     "lon": 126.71531
+    }
+   ],
+   "dest_lat": 37.31362,
+   "dest_lon": 126.76022
+  },
+  {
+   "id": 5,
+   "key": "오산시→화성시",
+   "origin": "오산시",
+   "dest_sgg": "화성시",
+   "dest": "삼성화성캠퍼스",
+   "seoul": false,
+   "car_km": 10.7,
+   "T_car": 27.9,
+   "T_transit": 62.1,
+   "walk": 19.1,
+   "xfer": 0.82,
+   "PCTR": 2.222,
+   "PCTR_min": 1.75,
+   "PCTR_max": 3.04,
+   "n_pts": 5,
+   "diag": "DRT 연계",
+   "Q_od": 20512,
+   "Q_car": 12655,
+   "alpha_o": -2.0782,
+   "phi_proxy": 0.617,
+   "bus_candidate": true,
+   "service": "출퇴근 직행",
+   "model_D_day": 7309.132727,
+   "model_phi": 0.5,
+   "model_km": 10.7,
+   "T_new_bus": 37.9,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.16103,
+   "origin_lon": 127.05969,
+   "origin_points": [
+    {
+     "dong": "대원1동",
+     "pop": 44997,
+     "lat": 37.13543,
+     "lon": 127.07134
+    },
+    {
+     "dong": "신장1동",
+     "pop": 35309,
+     "lat": 37.17358,
+     "lon": 127.05206
+    },
+    {
+     "dong": "중앙동",
+     "pop": 32763,
+     "lat": 37.15438,
+     "lon": 127.08016
+    },
+    {
+     "dong": "남촌동",
+     "pop": 32382,
+     "lat": 37.16447,
+     "lon": 127.05048
+    },
+    {
+     "dong": "세마동",
+     "pop": 31885,
+     "lat": 37.1866,
+     "lon": 127.04
+    }
+   ],
+   "dest_lat": 37.21853,
+   "dest_lon": 127.06596
+  },
+  {
+   "id": 6,
+   "key": "성남시→서울 강남구",
+   "origin": "성남시",
+   "dest_sgg": "서울 강남구",
+   "dest": "강남역",
+   "seoul": true,
+   "car_km": 17.4,
+   "T_car": 48.7,
+   "T_transit": 41.7,
+   "walk": 11.2,
+   "xfer": 1.35,
+   "PCTR": 0.857,
+   "PCTR_min": 0.61,
+   "PCTR_max": 1.08,
+   "n_pts": 5,
+   "diag": "수요관리",
+   "Q_od": 31596,
+   "Q_car": 12590,
+   "alpha_o": 0.0819,
+   "phi_proxy": 0.398,
+   "bus_candidate": false,
+   "service": null,
+   "model_D_day": null,
+   "model_phi": null,
+   "model_km": null,
+   "T_new_bus": null,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.42307,
+   "origin_lon": 127.12531,
+   "origin_points": [
+    {
+     "dong": "위례동",
+     "pop": 45048,
+     "lat": 37.46798,
+     "lon": 127.14561
+    },
+    {
+     "dong": "운중동",
+     "pop": 38896,
+     "lat": 37.3748,
+     "lon": 127.07057
+    },
+    {
+     "dong": "성남동",
+     "pop": 31829,
+     "lat": 37.433,
+     "lon": 127.13524
+    },
+    {
+     "dong": "신흥2동",
+     "pop": 31579,
+     "lat": 37.44948,
+     "lon": 127.14903
+    },
+    {
+     "dong": "서현1동",
+     "pop": 30506,
+     "lat": 37.38058,
+     "lon": 127.13019
+    }
+   ],
+   "dest_lat": 37.49795,
+   "dest_lon": 127.02762
+  },
+  {
+   "id": 7,
+   "key": "고양시→파주시",
+   "origin": "고양시",
+   "dest_sgg": "파주시",
+   "dest": "LG디스플레이파주",
+   "seoul": false,
+   "car_km": 27.0,
+   "T_car": 36.1,
+   "T_transit": 63.2,
+   "walk": 25.9,
+   "xfer": 1.82,
+   "PCTR": 1.748,
+   "PCTR_min": 1.18,
+   "PCTR_max": 2.2,
+   "n_pts": 5,
+   "diag": "DRT 연계",
+   "Q_od": 23239,
+   "Q_car": 18660,
+   "alpha_o": -0.3823,
+   "phi_proxy": 0.803,
+   "bus_candidate": true,
+   "service": "출퇴근 직행",
+   "model_D_day": 6468.694731,
+   "model_phi": 0.5,
+   "model_km": 27.0,
+   "T_new_bus": 46.1,
+   "alloc_am": 15,
+   "alloc_t_year": 282.4,
+   "origin_lat": 37.66912,
+   "origin_lon": 126.79307,
+   "origin_points": [
+    {
+     "dong": "풍산동",
+     "pop": 42248,
+     "lat": 37.66931,
+     "lon": 126.79657
+    },
+    {
+     "dong": "식사동",
+     "pop": 40204,
+     "lat": 37.6802,
+     "lon": 126.81161
+    },
+    {
+     "dong": "화정1동",
+     "pop": 34698,
+     "lat": 37.64206,
+     "lon": 126.83386
+    },
+    {
+     "dong": "대화동",
+     "pop": 33250,
+     "lat": 37.67381,
+     "lon": 126.74971
+    },
+    {
+     "dong": "일산3동",
+     "pop": 32821,
+     "lat": 37.67915,
+     "lon": 126.76667
+    }
+   ],
+   "dest_lat": 37.81067,
+   "dest_lon": 126.76724
+  },
+  {
+   "id": 8,
+   "key": "수원시→서울 강남구",
+   "origin": "수원시",
+   "dest_sgg": "서울 강남구",
+   "dest": "강남역",
+   "seoul": true,
+   "car_km": 32.5,
+   "T_car": 78.2,
+   "T_transit": 61.9,
+   "walk": 10.4,
+   "xfer": 0.58,
+   "PCTR": 0.791,
+   "PCTR_min": 0.68,
+   "PCTR_max": 0.93,
+   "n_pts": 5,
+   "diag": "수요관리",
+   "Q_od": 20591,
+   "Q_car": 3224,
+   "alpha_o": -0.9337,
+   "phi_proxy": 0.157,
+   "bus_candidate": false,
+   "service": null,
+   "model_D_day": null,
+   "model_phi": null,
+   "model_km": null,
+   "T_new_bus": null,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.27137,
+   "origin_lon": 127.02307,
+   "origin_points": [
+    {
+     "dong": "광교1동",
+     "pop": 53856,
+     "lat": 37.29105,
+     "lon": 127.0524
+    },
+    {
+     "dong": "권선2동",
+     "pop": 46028,
+     "lat": 37.24741,
+     "lon": 127.02711
+    },
+    {
+     "dong": "원천동",
+     "pop": 45639,
+     "lat": 37.27269,
+     "lon": 127.05975
+    },
+    {
+     "dong": "인계동",
+     "pop": 45208,
+     "lat": 37.26992,
+     "lon": 127.02578
+    },
+    {
+     "dong": "금곡동",
+     "pop": 44160,
+     "lat": 37.27248,
+     "lon": 126.94243
+    }
+   ],
+   "dest_lat": 37.49795,
+   "dest_lon": 127.02762
+  },
+  {
+   "id": 9,
+   "key": "평택시→화성시",
+   "origin": "평택시",
+   "dest_sgg": "화성시",
+   "dest": "기아화성공장",
+   "seoul": false,
+   "car_km": 41.2,
+   "T_car": 58.8,
+   "T_transit": 150.9,
+   "walk": 29.1,
+   "xfer": 2.38,
+   "PCTR": 2.566,
+   "PCTR_min": 2.24,
+   "PCTR_max": 2.77,
+   "n_pts": 5,
+   "diag": "DRT 연계",
+   "Q_od": 14825,
+   "Q_car": 9433,
+   "alpha_o": -2.4562,
+   "phi_proxy": 0.636,
+   "bus_candidate": true,
+   "service": "출퇴근 직행",
+   "model_D_day": 5715.594035,
+   "model_phi": 0.5,
+   "model_km": 41.2,
+   "T_new_bus": 68.8,
+   "alloc_am": 15,
+   "alloc_t_year": 430.9,
+   "origin_lat": 37.02537,
+   "origin_lon": 127.08443,
+   "origin_points": [
+    {
+     "dong": "고덕동",
+     "pop": 67920,
+     "lat": 37.04919,
+     "lon": 127.04443
+    },
+    {
+     "dong": "비전2동",
+     "pop": 55735,
+     "lat": 36.9936,
+     "lon": 127.11928
+    },
+    {
+     "dong": "비전1동",
+     "pop": 48765,
+     "lat": 37.00602,
+     "lon": 127.10958
+    },
+    {
+     "dong": "동삭동",
+     "pop": 45357,
+     "lat": 37.02059,
+     "lon": 127.09771
+    },
+    {
+     "dong": "중앙동",
+     "pop": 45255,
+     "lat": 37.05438,
+     "lon": 127.06113
+    }
+   ],
+   "dest_lat": 37.03545,
+   "dest_lon": 126.75796
+  },
+  {
+   "id": 10,
+   "key": "용인시→서울 서초구",
+   "origin": "용인시",
+   "dest_sgg": "서울 서초구",
+   "dest": "양재역",
+   "seoul": true,
+   "car_km": 26.1,
+   "T_car": 64.9,
+   "T_transit": 44.9,
+   "walk": 11.2,
+   "xfer": 0.58,
+   "PCTR": 0.693,
+   "PCTR_min": 0.52,
+   "PCTR_max": 0.82,
+   "n_pts": 5,
+   "diag": "수요관리",
+   "Q_od": 16452,
+   "Q_car": 5595,
+   "alpha_o": 0.5105,
+   "phi_proxy": 0.34,
+   "bus_candidate": false,
+   "service": null,
+   "model_D_day": null,
+   "model_phi": null,
+   "model_km": null,
+   "T_new_bus": null,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.31601,
+   "origin_lon": 127.08816,
+   "origin_points": [
+    {
+     "dong": "성복동",
+     "pop": 54505,
+     "lat": 37.31683,
+     "lon": 127.07117
+    },
+    {
+     "dong": "동천동",
+     "pop": 50731,
+     "lat": 37.33682,
+     "lon": 127.09308
+    },
+    {
+     "dong": "풍덕천2동",
+     "pop": 41152,
+     "lat": 37.31899,
+     "lon": 127.08935
+    },
+    {
+     "dong": "신봉동",
+     "pop": 40946,
+     "lat": 37.3266,
+     "lon": 127.07417
+    },
+    {
+     "dong": "구갈동",
+     "pop": 39845,
+     "lat": 37.27442,
+     "lon": 127.11827
+    }
+   ],
+   "dest_lat": 37.4846,
+   "dest_lon": 127.0346
+  },
+  {
+   "id": 11,
+   "key": "파주시→서울 영등포구",
+   "origin": "파주시",
+   "dest_sgg": "서울 영등포구",
+   "dest": "여의도역",
+   "seoul": true,
+   "car_km": 39.5,
+   "T_car": 70.6,
+   "T_transit": 72.1,
+   "walk": 17.2,
+   "xfer": 1.56,
+   "PCTR": 1.021,
+   "PCTR_min": 0.9,
+   "PCTR_max": 1.31,
+   "n_pts": 5,
+   "diag": "수요관리",
+   "Q_od": 15827,
+   "Q_car": 8919,
+   "alpha_o": 0.1889,
+   "phi_proxy": 0.564,
+   "bus_candidate": false,
+   "service": null,
+   "model_D_day": null,
+   "model_phi": null,
+   "model_km": null,
+   "T_new_bus": null,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.74619,
+   "origin_lon": 126.74835,
+   "origin_points": [
+    {
+     "dong": "운정3동",
+     "pop": 66919,
+     "lat": 37.71229,
+     "lon": 126.75038
+    },
+    {
+     "dong": "운정2동",
+     "pop": 63762,
+     "lat": 37.72678,
+     "lon": 126.73913
+    },
+    {
+     "dong": "운정5동",
+     "pop": 58833,
+     "lat": 37.72788,
+     "lon": 126.71923
+    },
+    {
+     "dong": "운정1동",
+     "pop": 58806,
+     "lat": 37.73094,
+     "lon": 126.75918
+    },
+    {
+     "dong": "문산읍",
+     "pop": 47775,
+     "lat": 37.86087,
+     "lon": 126.78032
+    }
+   ],
+   "dest_lat": 37.52156,
+   "dest_lon": 126.92449
+  },
+  {
+   "id": 12,
+   "key": "남양주시→서울 강남구",
+   "origin": "남양주시",
+   "dest_sgg": "서울 강남구",
+   "dest": "강남역",
+   "seoul": true,
+   "car_km": 30.1,
+   "T_car": 82.3,
+   "T_transit": 63.9,
+   "walk": 12.1,
+   "xfer": 1.42,
+   "PCTR": 0.776,
+   "PCTR_min": 0.71,
+   "PCTR_max": 0.85,
+   "n_pts": 5,
+   "diag": "수요관리",
+   "Q_od": 15872,
+   "Q_car": 8759,
+   "alpha_o": 1.0196,
+   "phi_proxy": 0.552,
+   "bus_candidate": false,
+   "service": null,
+   "model_D_day": null,
+   "model_phi": null,
+   "model_km": null,
+   "T_new_bus": null,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.65255,
+   "origin_lon": 127.20119,
+   "origin_points": [
+    {
+     "dong": "화도읍",
+     "pop": 111704,
+     "lat": 37.65801,
+     "lon": 127.30256
+    },
+    {
+     "dong": "다산1동",
+     "pop": 105713,
+     "lat": 37.61968,
+     "lon": 127.15537
+    },
+    {
+     "dong": "진접읍",
+     "pop": 94314,
+     "lat": 37.72064,
+     "lon": 127.19488
+    },
+    {
+     "dong": "별내동",
+     "pop": 83028,
+     "lat": 37.65915,
+     "lon": 127.12095
+    },
+    {
+     "dong": "와부읍",
+     "pop": 59388,
+     "lat": 37.58342,
+     "lon": 127.21426
+    }
+   ],
+   "dest_lat": 37.49795,
+   "dest_lon": 127.02762
+  },
+  {
+   "id": 13,
+   "key": "안산시→시흥시",
+   "origin": "안산시",
+   "dest_sgg": "시흥시",
+   "dest": "시화산단",
+   "seoul": false,
+   "car_km": 14.0,
+   "T_car": 35.2,
+   "T_transit": 68.6,
+   "walk": 15.5,
+   "xfer": 1.35,
+   "PCTR": 1.951,
+   "PCTR_min": 1.71,
+   "PCTR_max": 2.28,
+   "n_pts": 5,
+   "diag": "출퇴근 직행",
+   "Q_od": 16397,
+   "Q_car": 8669,
+   "alpha_o": -2.0238,
+   "phi_proxy": 0.529,
+   "bus_candidate": true,
+   "service": "출퇴근 직행",
+   "model_D_day": 4929.513869,
+   "model_phi": 0.5,
+   "model_km": 14.0,
+   "T_new_bus": 45.2,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.31533,
+   "origin_lon": 126.82695,
+   "origin_points": [
+    {
+     "dong": "초지동",
+     "pop": 46079,
+     "lat": 37.30836,
+     "lon": 126.80993
+    },
+    {
+     "dong": "호수동",
+     "pop": 41441,
+     "lat": 37.30816,
+     "lon": 126.83284
+    },
+    {
+     "dong": "해양동",
+     "pop": 39171,
+     "lat": 37.29567,
+     "lon": 126.82416
+    },
+    {
+     "dong": "와동",
+     "pop": 34691,
+     "lat": 37.33811,
+     "lon": 126.82363
+    },
+    {
+     "dong": "월피동",
+     "pop": 34465,
+     "lat": 37.33269,
+     "lon": 126.84915
+    }
+   ],
+   "dest_lat": 37.34939,
+   "dest_lon": 126.71088
+  },
+  {
+   "id": 14,
+   "key": "고양시→서울 강남구",
+   "origin": "고양시",
+   "dest_sgg": "서울 강남구",
+   "dest": "강남역",
+   "seoul": true,
+   "car_km": 39.3,
+   "T_car": 93.5,
+   "T_transit": 83.0,
+   "walk": 10.4,
+   "xfer": 1.19,
+   "PCTR": 0.888,
+   "PCTR_min": 0.75,
+   "PCTR_max": 1.0,
+   "n_pts": 5,
+   "diag": "수요관리",
+   "Q_od": 17653,
+   "Q_car": 5616,
+   "alpha_o": -0.3823,
+   "phi_proxy": 0.318,
+   "bus_candidate": false,
+   "service": null,
+   "model_D_day": null,
+   "model_phi": null,
+   "model_km": null,
+   "T_new_bus": null,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.66912,
+   "origin_lon": 126.79307,
+   "origin_points": [
+    {
+     "dong": "풍산동",
+     "pop": 42248,
+     "lat": 37.66931,
+     "lon": 126.79657
+    },
+    {
+     "dong": "식사동",
+     "pop": 40204,
+     "lat": 37.6802,
+     "lon": 126.81161
+    },
+    {
+     "dong": "화정1동",
+     "pop": 34698,
+     "lat": 37.64206,
+     "lon": 126.83386
+    },
+    {
+     "dong": "대화동",
+     "pop": 33250,
+     "lat": 37.67381,
+     "lon": 126.74971
+    },
+    {
+     "dong": "일산3동",
+     "pop": 32821,
+     "lat": 37.67915,
+     "lon": 126.76667
+    }
+   ],
+   "dest_lat": 37.49795,
+   "dest_lon": 127.02762
+  },
+  {
+   "id": 15,
+   "key": "용인시→수원시 영통구",
+   "origin": "용인시",
+   "dest_sgg": "수원시 영통구",
+   "dest": "삼성디지털시티",
+   "seoul": false,
+   "car_km": 10.9,
+   "T_car": 33.6,
+   "T_transit": 51.3,
+   "walk": 23.0,
+   "xfer": 1.65,
+   "PCTR": 1.525,
+   "PCTR_min": 1.41,
+   "PCTR_max": 1.67,
+   "n_pts": 5,
+   "diag": "DRT 연계",
+   "Q_od": 14798,
+   "Q_car": 12806,
+   "alpha_o": 0.5105,
+   "phi_proxy": 0.865,
+   "bus_candidate": true,
+   "service": "출퇴근 직행",
+   "model_D_day": 2565.131537,
+   "model_phi": 0.5,
+   "model_km": 10.9,
+   "T_new_bus": 43.6,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.31601,
+   "origin_lon": 127.08816,
+   "origin_points": [
+    {
+     "dong": "성복동",
+     "pop": 54505,
+     "lat": 37.31683,
+     "lon": 127.07117
+    },
+    {
+     "dong": "동천동",
+     "pop": 50731,
+     "lat": 37.33682,
+     "lon": 127.09308
+    },
+    {
+     "dong": "풍덕천2동",
+     "pop": 41152,
+     "lat": 37.31899,
+     "lon": 127.08935
+    },
+    {
+     "dong": "신봉동",
+     "pop": 40946,
+     "lat": 37.3266,
+     "lon": 127.07417
+    },
+    {
+     "dong": "구갈동",
+     "pop": 39845,
+     "lat": 37.27442,
+     "lon": 127.11827
+    }
+   ],
+   "dest_lat": 37.25729,
+   "dest_lon": 127.05209
+  },
+  {
+   "id": 16,
+   "key": "안산시→화성시",
+   "origin": "안산시",
+   "dest_sgg": "화성시",
+   "dest": "현대차남양연구소",
+   "seoul": false,
+   "car_km": 22.9,
+   "T_car": 49.9,
+   "T_transit": 95.5,
+   "walk": 21.2,
+   "xfer": 1.59,
+   "PCTR": 1.915,
+   "PCTR_min": 1.77,
+   "PCTR_max": 2.04,
+   "n_pts": 5,
+   "diag": "DRT 연계",
+   "Q_od": 15376,
+   "Q_car": 7901,
+   "alpha_o": -2.0238,
+   "phi_proxy": 0.514,
+   "bus_candidate": true,
+   "service": "출퇴근 직행",
+   "model_D_day": 4472.794866,
+   "model_phi": 0.5,
+   "model_km": 22.9,
+   "T_new_bus": 59.9,
+   "alloc_am": 15,
+   "alloc_t_year": 239.5,
+   "origin_lat": 37.31533,
+   "origin_lon": 126.82695,
+   "origin_points": [
+    {
+     "dong": "초지동",
+     "pop": 46079,
+     "lat": 37.30836,
+     "lon": 126.80993
+    },
+    {
+     "dong": "호수동",
+     "pop": 41441,
+     "lat": 37.30816,
+     "lon": 126.83284
+    },
+    {
+     "dong": "해양동",
+     "pop": 39171,
+     "lat": 37.29567,
+     "lon": 126.82416
+    },
+    {
+     "dong": "와동",
+     "pop": 34691,
+     "lat": 37.33811,
+     "lon": 126.82363
+    },
+    {
+     "dong": "월피동",
+     "pop": 34465,
+     "lat": 37.33269,
+     "lon": 126.84915
+    }
+   ],
+   "dest_lat": 37.15568,
+   "dest_lon": 126.82673
+  },
+  {
+   "id": 17,
+   "key": "화성시→서울 강남구",
+   "origin": "화성시",
+   "dest_sgg": "서울 강남구",
+   "dest": "강남역",
+   "seoul": true,
+   "car_km": 46.9,
+   "T_car": 88.9,
+   "T_transit": 76.8,
+   "walk": 15.4,
+   "xfer": 0.68,
+   "PCTR": 0.863,
+   "PCTR_min": 0.72,
+   "PCTR_max": 1.11,
+   "n_pts": 5,
+   "diag": "수요관리",
+   "Q_od": 12514,
+   "Q_car": 3423,
+   "alpha_o": -0.5051,
+   "phi_proxy": 0.274,
+   "bus_candidate": false,
+   "service": null,
+   "model_D_day": null,
+   "model_phi": null,
+   "model_km": null,
+   "T_new_bus": null,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.18283,
+   "origin_lon": 126.97842,
+   "origin_points": [
+    {
+     "dong": "봉담읍",
+     "pop": 112861,
+     "lat": 37.22257,
+     "lon": 126.95679
+    },
+    {
+     "dong": "향남읍",
+     "pop": 84621,
+     "lat": 37.12416,
+     "lon": 126.91744
+    },
+    {
+     "dong": "동탄9동",
+     "pop": 61708,
+     "lat": 37.18465,
+     "lon": 127.12658
+    },
+    {
+     "dong": "남양읍",
+     "pop": 60607,
+     "lat": 37.20036,
+     "lon": 126.82376
+    },
+    {
+     "dong": "동탄7동",
+     "pop": 57512,
+     "lat": 37.17073,
+     "lon": 127.11463
+    }
+   ],
+   "dest_lat": 37.49795,
+   "dest_lon": 127.02762
+  },
+  {
+   "id": 18,
+   "key": "고양시→서울 중구",
+   "origin": "고양시",
+   "dest_sgg": "서울 중구",
+   "dest": "시청역",
+   "seoul": true,
+   "car_km": 25.8,
+   "T_car": 81.4,
+   "T_transit": 63.5,
+   "walk": 17.3,
+   "xfer": 0.92,
+   "PCTR": 0.779,
+   "PCTR_min": 0.55,
+   "PCTR_max": 0.93,
+   "n_pts": 5,
+   "diag": "수요관리",
+   "Q_od": 16525,
+   "Q_car": 3880,
+   "alpha_o": -0.3823,
+   "phi_proxy": 0.235,
+   "bus_candidate": false,
+   "service": null,
+   "model_D_day": null,
+   "model_phi": null,
+   "model_km": null,
+   "T_new_bus": null,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.66912,
+   "origin_lon": 126.79307,
+   "origin_points": [
+    {
+     "dong": "풍산동",
+     "pop": 42248,
+     "lat": 37.66931,
+     "lon": 126.79657
+    },
+    {
+     "dong": "식사동",
+     "pop": 40204,
+     "lat": 37.6802,
+     "lon": 126.81161
+    },
+    {
+     "dong": "화정1동",
+     "pop": 34698,
+     "lat": 37.64206,
+     "lon": 126.83386
+    },
+    {
+     "dong": "대화동",
+     "pop": 33250,
+     "lat": 37.67381,
+     "lon": 126.74971
+    },
+    {
+     "dong": "일산3동",
+     "pop": 32821,
+     "lat": 37.67915,
+     "lon": 126.76667
+    }
+   ],
+   "dest_lat": 37.56548,
+   "dest_lon": 126.97711
+  },
+  {
+   "id": 19,
+   "key": "고양시→서울 영등포구",
+   "origin": "고양시",
+   "dest_sgg": "서울 영등포구",
+   "dest": "여의도역",
+   "seoul": true,
+   "car_km": 28.9,
+   "T_car": 62.9,
+   "T_transit": 60.5,
+   "walk": 16.5,
+   "xfer": 1.64,
+   "PCTR": 0.961,
+   "PCTR_min": 0.74,
+   "PCTR_max": 1.12,
+   "n_pts": 5,
+   "diag": "수요관리",
+   "Q_od": 16197,
+   "Q_car": 6078,
+   "alpha_o": -0.3823,
+   "phi_proxy": 0.375,
+   "bus_candidate": false,
+   "service": null,
+   "model_D_day": null,
+   "model_phi": null,
+   "model_km": null,
+   "T_new_bus": null,
+   "alloc_am": 0,
+   "alloc_t_year": 0.0,
+   "origin_lat": 37.66912,
+   "origin_lon": 126.79307,
+   "origin_points": [
+    {
+     "dong": "풍산동",
+     "pop": 42248,
+     "lat": 37.66931,
+     "lon": 126.79657
+    },
+    {
+     "dong": "식사동",
+     "pop": 40204,
+     "lat": 37.6802,
+     "lon": 126.81161
+    },
+    {
+     "dong": "화정1동",
+     "pop": 34698,
+     "lat": 37.64206,
+     "lon": 126.83386
+    },
+    {
+     "dong": "대화동",
+     "pop": 33250,
+     "lat": 37.67381,
+     "lon": 126.74971
+    },
+    {
+     "dong": "일산3동",
+     "pop": 32821,
+     "lat": 37.67915,
+     "lon": 126.76667
+    }
+   ],
+   "dest_lat": 37.52156,
+   "dest_lon": 126.92449
+  }
+ ],
+ "routes": [
+  {
+   "id": "P7001",
+   "origin": "가평군",
+   "origin_stop": "효정매그놀리아국제병원",
+   "dest_stop": "잠실역.롯데월드",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "송파구",
+   "seoul": true,
+   "km": 50.7,
+   "T_car": 64.1,
+   "T_transit": 78.0,
+   "PCTR": 1.217,
+   "n_cur_am": 1,
+   "alloc_base_am": 1,
+   "phi_proxy": 0.263,
+   "alpha_o": -1.6601,
+   "model_D_day": 3.43792,
+   "model_phi": 0.5,
+   "alloc_t_year": -29.4,
+   "origin_lat": 37.69108,
+   "origin_lon": 127.52136,
+   "dest_lat": 37.5129,
+   "dest_lon": 127.09796
+  },
+  {
+   "id": "P8001",
+   "origin": "광주시",
+   "origin_stop": "우방아이유쉘아파트",
+   "dest_stop": "양재역엘타워빌딩",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "서초구",
+   "seoul": true,
+   "km": 27.4,
+   "T_car": 73.0,
+   "T_transit": 52.0,
+   "PCTR": 0.712,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.127,
+   "alpha_o": -0.84,
+   "model_D_day": 43.688616,
+   "model_phi": 0.0,
+   "alloc_t_year": -39.0,
+   "origin_lat": 37.39689,
+   "origin_lon": 127.26087,
+   "dest_lat": 37.48253,
+   "dest_lon": 127.03576
+  },
+  {
+   "id": "P9801",
+   "origin": "군포시",
+   "origin_stop": "산본역",
+   "dest_stop": "서현역·분당우체국",
+   "dest_sido": "경기도",
+   "dest_sgg": "성남시분당구",
+   "seoul": false,
+   "km": 22.6,
+   "T_car": 37.8,
+   "T_transit": 45.0,
+   "PCTR": 1.19,
+   "n_cur_am": 1,
+   "alloc_base_am": 1,
+   "phi_proxy": 0.358,
+   "alpha_o": -1.1414,
+   "model_D_day": 45.012082,
+   "model_phi": 0.5,
+   "alloc_t_year": 15.8,
+   "origin_lat": 37.35805,
+   "origin_lon": 126.93305,
+   "dest_lat": 37.38491,
+   "dest_lon": 127.12333
+  },
+  {
+   "id": "P9701",
+   "origin": "동두천시",
+   "origin_stop": "지행역3번출구",
+   "dest_stop": "잠실광역환승센터",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "송파구",
+   "seoul": true,
+   "km": 54.1,
+   "T_car": 75.9,
+   "T_transit": 62.0,
+   "PCTR": 0.817,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.077,
+   "alpha_o": -1.8424,
+   "model_D_day": 3.690813,
+   "model_phi": 0.0,
+   "alloc_t_year": -74.7,
+   "origin_lat": 37.89263,
+   "origin_lon": 127.05628,
+   "dest_lat": 37.51165,
+   "dest_lon": 127.10264
+  },
+  {
+   "id": "P9501",
+   "origin": "부천시",
+   "origin_stop": "별빛마루도서관.소사경찰서",
+   "dest_stop": "판교제2테크노밸리",
+   "dest_sido": "경기도",
+   "dest_sgg": "성남시수정구",
+   "seoul": false,
+   "km": 33.9,
+   "T_car": 70.2,
+   "T_transit": 79.0,
+   "PCTR": 1.125,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.28,
+   "alpha_o": -1.32,
+   "model_D_day": 9.140519,
+   "model_phi": 0.5,
+   "alloc_t_year": -36.9,
+   "origin_lat": 37.4674,
+   "origin_lon": 126.82261,
+   "dest_lat": 37.41169,
+   "dest_lon": 127.09946
+  },
+  {
+   "id": "P9110",
+   "origin": "수원시",
+   "origin_stop": "수원아이파크시티 선일초교",
+   "dest_stop": "서울역버스환승센터",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "중구",
+   "seoul": true,
+   "km": 50.9,
+   "T_car": 95.3,
+   "T_transit": 90.0,
+   "PCTR": 0.944,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.247,
+   "alpha_o": -0.9337,
+   "model_D_day": 86.556098,
+   "model_phi": 0.0,
+   "alloc_t_year": -74.8,
+   "origin_lat": 37.24723,
+   "origin_lon": 127.02901,
+   "dest_lat": 37.55553,
+   "dest_lon": 126.97298
+  },
+  {
+   "id": "P5342",
+   "origin": "수원시",
+   "origin_stop": "수원버스터미널",
+   "dest_stop": "잠실광역환승센터",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "송파구",
+   "seoul": true,
+   "km": 36.7,
+   "T_car": 81.1,
+   "T_transit": 85.0,
+   "PCTR": 1.048,
+   "n_cur_am": 3,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.314,
+   "alpha_o": -0.9337,
+   "model_D_day": 108.525875,
+   "model_phi": 0.346324,
+   "alloc_t_year": 18.8,
+   "origin_lat": 37.25123,
+   "origin_lon": 127.01993,
+   "dest_lat": 37.51165,
+   "dest_lon": 127.10264
+  },
+  {
+   "id": "P9530",
+   "origin": "시흥시",
+   "origin_stop": "시흥능곡역2번출구",
+   "dest_stop": "판교제2테크노밸리",
+   "dest_sido": "경기도",
+   "dest_sgg": "성남시수정구",
+   "seoul": false,
+   "km": 42.1,
+   "T_car": 67.9,
+   "T_transit": 63.0,
+   "PCTR": 0.928,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.199,
+   "alpha_o": -1.1509,
+   "model_D_day": 5.054109,
+   "model_phi": 0.0,
+   "alloc_t_year": -58.2,
+   "origin_lat": 37.36921,
+   "origin_lon": 126.8088,
+   "dest_lat": 37.41169,
+   "dest_lon": 127.09946
+  },
+  {
+   "id": "P9540",
+   "origin": "시흥시",
+   "origin_stop": "이마트",
+   "dest_stop": "판교제2테크노밸리",
+   "dest_sido": "경기도",
+   "dest_sgg": "성남시수정구",
+   "seoul": false,
+   "km": 46.2,
+   "T_car": 66.3,
+   "T_transit": 86.0,
+   "PCTR": 1.297,
+   "n_cur_am": 1,
+   "alloc_base_am": 1,
+   "phi_proxy": 0.421,
+   "alpha_o": -1.1509,
+   "model_D_day": 15.407567,
+   "model_phi": 0.5,
+   "alloc_t_year": -9.4,
+   "origin_lat": 37.34615,
+   "origin_lon": 126.73735,
+   "dest_lat": 37.41169,
+   "dest_lon": 127.09946
+  },
+  {
+   "id": "P9541",
+   "origin": "시흥시",
+   "origin_stop": "이마트",
+   "dest_stop": "사당역3번출구",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "동작구",
+   "seoul": true,
+   "km": 35.2,
+   "T_car": 66.7,
+   "T_transit": 67.0,
+   "PCTR": 1.004,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.243,
+   "alpha_o": -1.1509,
+   "model_D_day": 6.229449,
+   "model_phi": 0.096139,
+   "alloc_t_year": -47.3,
+   "origin_lat": 37.34615,
+   "origin_lon": 126.73735,
+   "dest_lat": 37.47658,
+   "dest_lon": 126.98275
+  },
+  {
+   "id": "P9601",
+   "origin": "양주시",
+   "origin_stop": "회암초중교",
+   "dest_stop": "양재역.서초문화예술회관",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "서초구",
+   "seoul": true,
+   "km": 54.1,
+   "T_car": 98.1,
+   "T_transit": 86.0,
+   "PCTR": 0.877,
+   "n_cur_am": 1,
+   "alloc_base_am": 1,
+   "phi_proxy": 0.143,
+   "alpha_o": -1.3691,
+   "model_D_day": 15.662964,
+   "model_phi": 0.0,
+   "alloc_t_year": -38.2,
+   "origin_lat": 37.83515,
+   "origin_lon": 127.0878,
+   "dest_lat": 37.4824,
+   "dest_lon": 127.03657
+  },
+  {
+   "id": "P9602",
+   "origin": "양주시",
+   "origin_stop": "회암초중교",
+   "dest_stop": "양재역.서초문화예술회관",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "서초구",
+   "seoul": true,
+   "km": 54.1,
+   "T_car": 98.1,
+   "T_transit": 86.0,
+   "PCTR": 0.877,
+   "n_cur_am": 1,
+   "alloc_base_am": 1,
+   "phi_proxy": 0.143,
+   "alpha_o": -1.3691,
+   "model_D_day": 15.662964,
+   "model_phi": 0.0,
+   "alloc_t_year": -38.2,
+   "origin_lat": 37.83515,
+   "origin_lon": 127.0878,
+   "dest_lat": 37.4824,
+   "dest_lon": 127.03657
+  },
+  {
+   "id": "P9603",
+   "origin": "양주시",
+   "origin_stop": "양주자이6.7단지입구",
+   "dest_stop": "테크노마트앞.강변역",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "광진구",
+   "seoul": true,
+   "km": 39.3,
+   "T_car": 56.6,
+   "T_transit": 71.0,
+   "PCTR": 1.254,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.344,
+   "alpha_o": -1.3691,
+   "model_D_day": 12.333675,
+   "model_phi": 0.5,
+   "alloc_t_year": -38.9,
+   "origin_lat": 37.80174,
+   "origin_lon": 127.10183,
+   "dest_lat": 37.5367,
+   "dest_lon": 127.09395
+  },
+  {
+   "id": "P9604",
+   "origin": "양주시",
+   "origin_stop": "베네스트하우스",
+   "dest_stop": "테크노마트앞.강변역",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "광진구",
+   "seoul": true,
+   "km": 42.5,
+   "T_car": 59.1,
+   "T_transit": 48.0,
+   "PCTR": 0.812,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.116,
+   "alpha_o": -1.3691,
+   "model_D_day": 5.125,
+   "model_phi": 0.0,
+   "alloc_t_year": -58.8,
+   "origin_lat": 37.81659,
+   "origin_lon": 127.05153,
+   "dest_lat": 37.5367,
+   "dest_lon": 127.09395
+  },
+  {
+   "id": "P9201",
+   "origin": "용인시",
+   "origin_stop": "한숲6단지",
+   "dest_stop": "지하철2호선 강남역",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "강남구",
+   "seoul": true,
+   "km": 53.9,
+   "T_car": 100.0,
+   "T_transit": 77.0,
+   "PCTR": 0.77,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.419,
+   "alpha_o": 0.5105,
+   "model_D_day": 227.32707,
+   "model_phi": 0.0,
+   "alloc_t_year": -79.3,
+   "origin_lat": 37.15617,
+   "origin_lon": 127.17294,
+   "dest_lat": 37.50073,
+   "dest_lon": 127.02638
+  },
+  {
+   "id": "P9211",
+   "origin": "용인시",
+   "origin_stop": "마북동.현대연수원.한국미술관",
+   "dest_stop": "명동입구",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "중구",
+   "seoul": true,
+   "km": 38.4,
+   "T_car": 95.6,
+   "T_transit": 77.0,
+   "PCTR": 0.805,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.455,
+   "alpha_o": 0.5105,
+   "model_D_day": 69.904576,
+   "model_phi": 0.0,
+   "alloc_t_year": -55.8,
+   "origin_lat": 37.30894,
+   "origin_lon": 127.13098,
+   "dest_lat": 37.56432,
+   "dest_lon": 126.98244
+  },
+  {
+   "id": "P9242",
+   "origin": "용인시",
+   "origin_stop": "서천고등학교",
+   "dest_stop": "판교제2테크노밸리",
+   "dest_sido": "경기도",
+   "dest_sgg": "성남시수정구",
+   "seoul": false,
+   "km": 24.8,
+   "T_car": 59.8,
+   "T_transit": 57.0,
+   "PCTR": 0.953,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.588,
+   "alpha_o": 0.5105,
+   "model_D_day": 21.715102,
+   "model_phi": 0.0,
+   "alloc_t_year": -34.7,
+   "origin_lat": 37.23388,
+   "origin_lon": 127.06945,
+   "dest_lat": 37.41169,
+   "dest_lon": 127.09946
+  },
+  {
+   "id": "P9243",
+   "origin": "용인시",
+   "origin_stop": "흥덕중심상업지구",
+   "dest_stop": "잠실역.롯데월드몰",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "송파구",
+   "seoul": true,
+   "km": 34.2,
+   "T_car": 71.4,
+   "T_transit": 72.0,
+   "PCTR": 1.008,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.631,
+   "alpha_o": 0.5105,
+   "model_D_day": 66.665533,
+   "model_phi": 0.258059,
+   "alloc_t_year": -11.2,
+   "origin_lat": 37.27608,
+   "origin_lon": 127.07314,
+   "dest_lat": 37.51265,
+   "dest_lon": 127.10065
+  },
+  {
+   "id": "P9901",
+   "origin": "의왕시",
+   "origin_stop": "월암종점",
+   "dest_stop": "서현역.분당우체국",
+   "dest_sido": "경기도",
+   "dest_sgg": "성남시분당구",
+   "seoul": false,
+   "km": 24.8,
+   "T_car": 45.6,
+   "T_transit": 65.0,
+   "PCTR": 1.425,
+   "n_cur_am": 3,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.51,
+   "alpha_o": -1.0941,
+   "model_D_day": 71.856357,
+   "model_phi": 0.5,
+   "alloc_t_year": 22.0,
+   "origin_lat": 37.30309,
+   "origin_lon": 126.95569,
+   "dest_lat": 37.38491,
+   "dest_lon": 127.12333
+  },
+  {
+   "id": "P9902",
+   "origin": "의왕시",
+   "origin_stop": "숲속마을3.5단지",
+   "dest_stop": "서현역.분당우체국",
+   "dest_sido": "경기도",
+   "dest_sgg": "성남시분당구",
+   "seoul": false,
+   "km": 17.7,
+   "T_car": 26.2,
+   "T_transit": 56.0,
+   "PCTR": 2.137,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.792,
+   "alpha_o": -1.0941,
+   "model_D_day": 130.839238,
+   "model_phi": 0.5,
+   "alloc_t_year": 24.7,
+   "origin_lat": 37.40327,
+   "origin_lon": 126.98644,
+   "dest_lat": 37.38491,
+   "dest_lon": 127.12333
+  },
+  {
+   "id": "P9401",
+   "origin": "의정부시",
+   "origin_stop": "민락중학교",
+   "dest_stop": "건대입구역사거리.건대병원",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "광진구",
+   "seoul": true,
+   "km": 27.2,
+   "T_car": 69.1,
+   "T_transit": 64.0,
+   "PCTR": 0.926,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.183,
+   "alpha_o": -1.2482,
+   "model_D_day": 10.816415,
+   "model_phi": 0.0,
+   "alloc_t_year": -37.8,
+   "origin_lat": 37.74048,
+   "origin_lon": 127.09553,
+   "dest_lat": 37.5409,
+   "dest_lon": 127.07129
+  },
+  {
+   "id": "P9402",
+   "origin": "의정부시",
+   "origin_stop": "송산초교.상가단지",
+   "dest_stop": "건대입구역사거리.건대병원",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "광진구",
+   "seoul": true,
+   "km": 30.3,
+   "T_car": 66.3,
+   "T_transit": 63.0,
+   "PCTR": 0.95,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.196,
+   "alpha_o": -1.2482,
+   "model_D_day": 10.649581,
+   "model_phi": 0.0,
+   "alloc_t_year": -42.1,
+   "origin_lat": 37.74546,
+   "origin_lon": 127.09926,
+   "dest_lat": 37.5409,
+   "dest_lon": 127.07129
+  },
+  {
+   "id": "P9404",
+   "origin": "의정부시",
+   "origin_stop": "정음마을고산2단지",
+   "dest_stop": "건대입구역사거리.건대병원",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "광진구",
+   "seoul": true,
+   "km": 30.5,
+   "T_car": 67.2,
+   "T_transit": 73.0,
+   "PCTR": 1.086,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.272,
+   "alpha_o": -1.2482,
+   "model_D_day": 16.836006,
+   "model_phi": 0.427443,
+   "alloc_t_year": -28.3,
+   "origin_lat": 37.74289,
+   "origin_lon": 127.1156,
+   "dest_lat": 37.5409,
+   "dest_lon": 127.07129
+  },
+  {
+   "id": "P8101",
+   "origin": "평택시",
+   "origin_stop": "연화초등학교",
+   "dest_stop": "교대역14번출구",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "서초구",
+   "seoul": true,
+   "km": 77.9,
+   "T_car": 94.3,
+   "T_transit": 114.0,
+   "PCTR": 1.209,
+   "n_cur_am": 3,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.136,
+   "alpha_o": -2.4562,
+   "model_D_day": 61.596639,
+   "model_phi": 0.40379,
+   "alloc_t_year": 13.8,
+   "origin_lat": 36.97281,
+   "origin_lon": 126.90545,
+   "dest_lat": 37.49418,
+   "dest_lon": 127.01591
+  },
+  {
+   "id": "P9301",
+   "origin": "화성시",
+   "origin_stop": "나루마을.월드반도",
+   "dest_stop": "잠실광역환승센터",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "송파구",
+   "seoul": true,
+   "km": 44.5,
+   "T_car": 81.1,
+   "T_transit": 78.0,
+   "PCTR": 0.962,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.348,
+   "alpha_o": -0.5051,
+   "model_D_day": 46.543294,
+   "model_phi": 0.0,
+   "alloc_t_year": -63.5,
+   "origin_lat": 37.19084,
+   "origin_lon": 127.0763,
+   "dest_lat": 37.51165,
+   "dest_lon": 127.10264
+  },
+  {
+   "id": "P9302",
+   "origin": "화성시",
+   "origin_stop": "호수자이파밀리에.아이원",
+   "dest_stop": "잠실광역환승센터",
+   "dest_sido": "서울특별시",
+   "dest_sgg": "송파구",
+   "seoul": true,
+   "km": 48.6,
+   "T_car": 84.1,
+   "T_transit": 89.0,
+   "PCTR": 1.058,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.42,
+   "alpha_o": -0.5051,
+   "model_D_day": 76.302648,
+   "model_phi": 0.457497,
+   "alloc_t_year": 39.6,
+   "origin_lat": 37.16042,
+   "origin_lon": 127.10496,
+   "dest_lat": 37.51165,
+   "dest_lon": 127.10264
+  },
+  {
+   "id": "P9303",
+   "origin": "화성시",
+   "origin_stop": "호반써밋동탄",
+   "dest_stop": "판교제2테크노밸리",
+   "dest_sido": "경기도",
+   "dest_sgg": "성남시수정구",
+   "seoul": false,
+   "km": 34.1,
+   "T_car": 70.5,
+   "T_transit": 68.0,
+   "PCTR": 0.965,
+   "n_cur_am": 2,
+   "alloc_base_am": 2,
+   "phi_proxy": 0.35,
+   "alpha_o": -0.5051,
+   "model_D_day": 12.509288,
+   "model_phi": 0.0,
+   "alloc_t_year": -47.4,
+   "origin_lat": 37.17329,
+   "origin_lon": 127.13326,
+   "dest_lat": 37.41169,
+   "dest_lon": 127.09946
+  },
+  {
+   "id": "P9304",
+   "origin": "화성시",
+   "origin_stop": "중외제약사거리",
+   "dest_stop": "판교2테크노밸리",
+   "dest_sido": "경기도",
+   "dest_sgg": "성남시수정구",
+   "seoul": false,
+   "km": 34.6,
+   "T_car": 68.0,
+   "T_transit": 81.0,
+   "PCTR": 1.191,
+   "n_cur_am": 2,
+   "alloc_base_am": 1,
+   "phi_proxy": 0.514,
+   "alpha_o": -0.5051,
+   "model_D_day": 37.08899,
+   "model_phi": 0.5,
+   "alloc_t_year": 16.6,
+   "origin_lat": 37.20215,
+   "origin_lon": 127.00204,
+   "dest_lat": 37.41169,
+   "dest_lon": 127.09946
+  }
+ ],
+ "scenario_grid": {
+  "mstar_44": 11.3,
+  "mstar_20": 10.9,
+  "ours_km": 29.3,
+  "base_km": 39.2,
+  "grid": [
+   {
+    "N": 20,
+    "phi": 0.25,
+    "car_riders": 5.0,
+    "ours_t": -563,
+    "base_t": -754
+   },
+   {
+    "N": 20,
+    "phi": 0.35,
+    "car_riders": 7.0,
+    "ours_t": -372,
+    "base_t": -498
+   },
+   {
+    "N": 20,
+    "phi": 0.5,
+    "car_riders": 10.0,
+    "ours_t": -86,
+    "base_t": -115
+   },
+   {
+    "N": 30,
+    "phi": 0.25,
+    "car_riders": 7.5,
+    "ours_t": -340,
+    "base_t": -455
+   },
+   {
+    "N": 30,
+    "phi": 0.35,
+    "car_riders": 10.5,
+    "ours_t": -54,
+    "base_t": -72
+   },
+   {
+    "N": 30,
+    "phi": 0.5,
+    "car_riders": 15.0,
+    "ours_t": 375,
+    "base_t": 502
+   },
+   {
+    "N": 44,
+    "phi": 0.25,
+    "car_riders": 11.0,
+    "ours_t": -28,
+    "base_t": -38
+   },
+   {
+    "N": 44,
+    "phi": 0.35,
+    "car_riders": 15.4,
+    "ours_t": 391,
+    "base_t": 524
+   },
+   {
+    "N": 44,
+    "phi": 0.5,
+    "car_riders": 22.0,
+    "ours_t": 1020,
+    "base_t": 1367
+   }
+  ],
+  "model_base": {
+   "ours": [
+    44,
+    0.5
+   ],
+   "base": [
+    19.5,
+    0.25
+   ]
+  }
+ },
+ "montecarlo": {
+  "method": "닫힌 식(scenario_grid.t_year), 배분 고정(PCTR 4축 출근 50회 / 현행 28노선 출근 50회), 퇴근 대칭 ×2, 근무일 245",
+  "n_draws": 20000,
+  "seed": 20261021,
+  "distributions": {
+   "N_p": {
+    "dist": "uniform",
+    "low": 20,
+    "high": 44
+   },
+   "phi_p": {
+    "dist": "uniform",
+    "low": 0.17,
+    "high": 0.6
+   },
+   "N_b": {
+    "dist": "uniform",
+    "low": 15,
+    "high": 40
+   },
+   "phi_b": {
+    "dist": "uniform",
+    "low": 0.15,
+    "high": 0.35
+   },
+   "COACH_KMPL": {
+    "dist": "uniform",
+    "low": 2.83,
+    "high": 4.0
+   },
+   "R_DH": {
+    "dist": "uniform",
+    "low": 0.0,
+    "high": 1.0
+   },
+   "CAR_OCC": {
+    "dist": "uniform",
+    "low": 1.1,
+    "high": 1.4
+   }
+  },
+  "shared_inputs": "COACH_KMPL·R_DH·CAR_OCC는 같은 시행에서 두 방식에 같은 값(공통 물리량), N·φ는 방식별 독립",
+  "bus_km_per_day": {
+   "pctr": 1463.5,
+   "base": 1960.3,
+   "pctr_avg_km": 29.3,
+   "base_avg_km": 39.2
+  },
+  "main": {
+   "P_pctr_gt_0": 0.609,
+   "P_base_lt_0": 0.856,
+   "P_pctr_gt_base": 0.873,
+   "P_base_gt_0": 0.144,
+   "P_pctr_gt_base_and_pctr_gt_0": 0.586,
+   "P_both_lt_0_pctr_less_bad": 0.287,
+   "pctr_t": {
+    "p5": -471,
+    "p50": 124,
+    "p95": 973
+   },
+   "base_t": {
+    "p5": -910,
+    "p50": -388,
+    "p95": 227
+   },
+   "diff_t": {
+    "p5": -228,
+    "p50": 517,
+    "p95": 1392
+   },
+   "mean": {
+    "pctr": 172,
+    "base": -372,
+    "diff": 544
+   },
+   "spearman_pctr": {
+    "N_p": 0.464,
+    "phi_p": 0.773,
+    "COACH_KMPL": 0.199,
+    "R_DH": -0.302,
+    "CAR_OCC": -0.144
+   },
+   "spearman_diff": {
+    "N_p": 0.424,
+    "phi_p": 0.691,
+    "N_b": -0.384,
+    "phi_b": -0.364,
+    "COACH_KMPL": -0.044,
+    "R_DH": 0.081,
+    "CAR_OCC": -0.026
+   }
+  },
+  "percentiles_from_draws": {
+   "pctr": {
+    "p5": -470.8,
+    "p10": -363.8,
+    "p25": -161.3,
+    "p50": 124.4,
+    "p75": 466.5,
+    "p90": 790.0,
+    "p95": 972.5
+   },
+   "base": {
+    "p5": -909.8,
+    "p10": -800.9,
+    "p25": -616.1,
+    "p50": -387.8,
+    "p75": -147.1,
+    "p90": 87.4,
+    "p95": 227.0
+   },
+   "diff": {
+    "p5": -228.0,
+    "p10": -63.5,
+    "p25": 204.4,
+    "p50": 517.0,
+    "p75": 873.2,
+    "p90": 1201.5,
+    "p95": 1392.2
+   }
+  },
+  "closed_form_check": {
+   "pctr_44_0p5": 1020.3,
+   "base_19p5_0p25": -768.4,
+   "allocation_json_ours": 1020.3,
+   "allocation_json_base": -792.7,
+   "note": "현행 방식 −793 t는 노선별 수요 모형(노선마다 다른 D·φ) 결과라 균일 19.5명·φ0.25 닫힌 식과 약간 다르다"
+  },
+  "histogram": {
+   "bins": 60,
+   "edges": [
+    -1400.0,
+    -1348.33,
+    -1296.67,
+    -1245.0,
+    -1193.33,
+    -1141.67,
+    -1090.0,
+    -1038.33,
+    -986.67,
+    -935.0,
+    -883.33,
+    -831.67,
+    -780.0,
+    -728.33,
+    -676.67,
+    -625.0,
+    -573.33,
+    -521.67,
+    -470.0,
+    -418.33,
+    -366.67,
+    -315.0,
+    -263.33,
+    -211.67,
+    -160.0,
+    -108.33,
+    -56.67,
+    -5.0,
+    46.67,
+    98.33,
+    150.0,
+    201.67,
+    253.33,
+    305.0,
+    356.67,
+    408.33,
+    460.0,
+    511.67,
+    563.33,
+    615.0,
+    666.67,
+    718.33,
+    770.0,
+    821.67,
+    873.33,
+    925.0,
+    976.67,
+    1028.33,
+    1080.0,
+    1131.67,
+    1183.33,
+    1235.0,
+    1286.67,
+    1338.33,
+    1390.0,
+    1441.67,
+    1493.33,
+    1545.0,
+    1596.67,
+    1648.33,
+    1700.0
+   ],
+   "pctr": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    5,
+    28,
+    37,
+    74,
+    111,
+    147,
+    245,
+    358,
+    429,
+    536,
+    667,
+    681,
+    829,
+    878,
+    886,
+    887,
+    942,
+    902,
+    925,
+    861,
+    852,
+    824,
+    760,
+    746,
+    684,
+    630,
+    614,
+    559,
+    528,
+    455,
+    404,
+    372,
+    349,
+    302,
+    294,
+    206,
+    228,
+    190,
+    131,
+    103,
+    87,
+    63,
+    67,
+    42,
+    37,
+    17,
+    14,
+    7,
+    3,
+    3
+   ],
+   "base": [
+    2,
+    2,
+    13,
+    13,
+    53,
+    100,
+    154,
+    201,
+    295,
+    367,
+    477,
+    543,
+    731,
+    871,
+    968,
+    1094,
+    1127,
+    1148,
+    1099,
+    1254,
+    1165,
+    1137,
+    1019,
+    957,
+    788,
+    789,
+    686,
+    581,
+    486,
+    399,
+    332,
+    285,
+    241,
+    212,
+    121,
+    106,
+    66,
+    53,
+    31,
+    13,
+    15,
+    4,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "diff_edges": [
+    -950.0,
+    -897.5,
+    -845.0,
+    -792.5,
+    -740.0,
+    -687.5,
+    -635.0,
+    -582.5,
+    -530.0,
+    -477.5,
+    -425.0,
+    -372.5,
+    -320.0,
+    -267.5,
+    -215.0,
+    -162.5,
+    -110.0,
+    -57.5,
+    -5.0,
+    47.5,
+    100.0,
+    152.5,
+    205.0,
+    257.5,
+    310.0,
+    362.5,
+    415.0,
+    467.5,
+    520.0,
+    572.5,
+    625.0,
+    677.5,
+    730.0,
+    782.5,
+    835.0,
+    887.5,
+    940.0,
+    992.5,
+    1045.0,
+    1097.5,
+    1150.0,
+    1202.5,
+    1255.0,
+    1307.5,
+    1360.0,
+    1412.5,
+    1465.0,
+    1517.5,
+    1570.0,
+    1622.5,
+    1675.0,
+    1727.5,
+    1780.0,
+    1832.5,
+    1885.0,
+    1937.5,
+    1990.0,
+    2042.5,
+    2095.0,
+    2147.5,
+    2200.0
+   ],
+   "n": 20000,
+   "diff": [
+    1,
+    0,
+    1,
+    13,
+    18,
+    30,
+    38,
+    54,
+    92,
+    102,
+    133,
+    151,
+    191,
+    242,
+    259,
+    325,
+    399,
+    432,
+    534,
+    610,
+    637,
+    749,
+    806,
+    825,
+    868,
+    867,
+    822,
+    844,
+    864,
+    770,
+    790,
+    784,
+    682,
+    624,
+    598,
+    615,
+    564,
+    452,
+    433,
+    429,
+    361,
+    333,
+    304,
+    221,
+    216,
+    175,
+    162,
+    135,
+    114,
+    93,
+    69,
+    62,
+    42,
+    26,
+    12,
+    11,
+    9,
+    2,
+    4,
+    1
+   ]
+  }
+ },
+ "sensitivity": {
+  "oneway": [
+   {
+    "param": "THETA",
+    "base_value": 0.1,
+    "values": [
+     0.05,
+     0.1,
+     0.15
+    ],
+    "ours_t": [
+     1020.3,
+     1020.3,
+     1020.3
+    ],
+    "base_t": [
+     -775.6,
+     -792.7,
+     -810.8
+    ],
+    "ours_min": 1020.3,
+    "ours_max": 1020.3,
+    "base_min": -810.8,
+    "base_max": -775.6,
+    "axes_changed": false
+   },
+   {
+    "param": "TARGET_PHI",
+    "base_value": 0.25,
+    "values": [
+     0.17,
+     0.25,
+     0.26
+    ],
+    "ours_t": [
+     1020.3,
+     1020.3,
+     1020.3
+    ],
+    "base_t": [
+     -995.6,
+     -792.7,
+     -768.4
+    ],
+    "ours_min": 1020.3,
+    "ours_max": 1020.3,
+    "base_min": -995.6,
+    "base_max": -768.4,
+    "axes_changed": false
+   },
+   {
+    "param": "TARGET_RIDE",
+    "base_value": 19.5,
+    "values": [
+     18.0,
+     19.5,
+     21.0
+    ],
+    "ours_t": [
+     1020.3,
+     1020.3,
+     1020.3
+    ],
+    "base_t": [
+     -833.5,
+     -792.7,
+     -748.3
+    ],
+    "ours_min": 1020.3,
+    "ours_max": 1020.3,
+    "base_min": -833.5,
+    "base_max": -748.3,
+    "axes_changed": false
+   },
+   {
+    "param": "R_DH",
+    "base_value": 1.0,
+    "values": [
+     0.0,
+     0.5,
+     1.0
+    ],
+    "ours_t": [
+     1459.4,
+     1239.9,
+     1020.3
+    ],
+    "base_t": [
+     -204.5,
+     -498.6,
+     -792.7
+    ],
+    "ours_min": 1020.3,
+    "ours_max": 1459.4,
+    "base_min": -792.7,
+    "base_max": -204.5,
+    "axes_changed": false
+   },
+   {
+    "param": "MAX_TRIPS",
+    "base_value": 15,
+    "values": [
+     9,
+     15,
+     20
+    ],
+    "ours_t": [
+     831.2,
+     1020.3,
+     1110.6
+    ],
+    "base_t": [
+     -792.7,
+     -792.7,
+     -792.7
+    ],
+    "ours_min": 831.2,
+    "ours_max": 1110.6,
+    "base_min": -792.7,
+    "base_max": -792.7,
+    "axes_changed": true
+   },
+   {
+    "param": "DRT_WAIT",
+    "base_value": 14.0,
+    "values": [
+     5.6,
+     14.0,
+     16.5
+    ],
+    "ours_t": [
+     1020.3,
+     1020.3,
+     1020.3
+    ],
+    "base_t": [
+     -792.7,
+     -792.7,
+     -792.7
+    ],
+    "ours_min": 1020.3,
+    "ours_max": 1020.3,
+    "base_min": -792.7,
+    "base_max": -792.7,
+    "axes_changed": false
+   },
+   {
+    "param": "COACH_KMPL",
+    "base_value": 3.49,
+    "values": [
+     2.83,
+     3.49,
+     4.0
+    ],
+    "ours_t": [
+     779.8,
+     1020.3,
+     1151.8
+    ],
+    "base_t": [
+     -1101.4,
+     -792.7,
+     -623.9
+    ],
+    "ours_min": 779.8,
+    "ours_max": 1151.8,
+    "base_min": -1101.4,
+    "base_max": -623.9,
+    "axes_changed": false
+   },
+   {
+    "param": "COACH_CAP",
+    "base_value": 44,
+    "values": [
+     28,
+     41,
+     44,
+     45
+    ],
+    "ours_t": [
+     282.8,
+     882.0,
+     1020.3,
+     1066.4
+    ],
+    "base_t": [
+     -871.7,
+     -791.4,
+     -792.7,
+     -791.9
+    ],
+    "ours_min": 282.8,
+    "ours_max": 1066.4,
+    "base_min": -871.7,
+    "base_max": -791.4,
+    "axes_changed": false
+   },
+   {
+    "param": "PHI_MAX",
+    "base_value": 0.5,
+    "values": [
+     0.26,
+     0.3,
+     0.35,
+     0.4,
+     0.5,
+     0.6
+    ],
+    "ours_t": [
+     13.7,
+     181.5,
+     391.2,
+     600.9,
+     1020.3,
+     1439.7
+    ],
+    "base_t": [
+     -759.3,
+     -777.8,
+     -794.2,
+     -792.8,
+     -792.7,
+     -812.9
+    ],
+    "ours_min": 13.7,
+    "ours_max": 1439.7,
+    "base_min": -812.9,
+    "base_max": -759.3,
+    "axes_changed": false
+   },
+   {
+    "param": "DETOUR",
+    "base_value": 1.0,
+    "values": [
+     0.85,
+     1.0,
+     1.15
+    ],
+    "ours_t": [
+     1020.3,
+     1020.3,
+     1020.3
+    ],
+    "base_t": [
+     -764.7,
+     -792.7,
+     -813.2
+    ],
+    "ours_min": 1020.3,
+    "ours_max": 1020.3,
+    "base_min": -813.2,
+    "base_max": -764.7,
+    "axes_changed": false
+   },
+   {
+    "param": "ACCESS_DIRECT",
+    "base_value": 10,
+    "values": [
+     7,
+     10,
+     15
+    ],
+    "ours_t": [
+     1020.3,
+     1020.3,
+     1020.3
+    ],
+    "base_t": [
+     -792.7,
+     -792.7,
+     -792.7
+    ],
+    "ours_min": 1020.3,
+    "ours_max": 1020.3,
+    "base_min": -792.7,
+    "base_max": -792.7,
+    "axes_changed": false
+   },
+   {
+    "param": "LOAD",
+    "base_value": 1.0,
+    "values": [
+     0.7,
+     1.0
+    ],
+    "ours_t": [
+     411.9,
+     1020.3
+    ],
+    "base_t": [
+     -872.5,
+     -792.7
+    ],
+    "ours_min": 411.9,
+    "ours_max": 1020.3,
+    "base_min": -872.5,
+    "base_max": -792.7,
+    "axes_changed": false
+   },
+   {
+    "param": "CAR_OCC",
+    "base_value": 1.1,
+    "values": [
+     1.1,
+     1.3
+    ],
+    "ours_t": [
+     1020.3,
+     697.7
+    ],
+    "base_t": [
+     -792.7,
+     -885.2
+    ],
+    "ours_min": 697.7,
+    "ours_max": 1020.3,
+    "base_min": -885.2,
+    "base_max": -792.7,
+    "axes_changed": false
+   },
+   {
+    "param": "PT_KM_SCALE",
+    "base_value": 1.0,
+    "values": [
+     0.7,
+     1.0
+    ],
+    "ours_t": [
+     891.1,
+     1020.3
+    ],
+    "base_t": [
+     -792.7,
+     -792.7
+    ],
+    "ours_min": 891.1,
+    "ours_max": 1020.3,
+    "base_min": -792.7,
+    "base_max": -792.7,
+    "axes_changed": false
+   },
+   {
+    "param": "BETA",
+    "base_value": 3.2,
+    "values": [
+     2.37,
+     3.2,
+     3.31
+    ],
+    "ours_t": [
+     1020.3,
+     1020.3,
+     1020.3
+    ],
+    "base_t": [
+     -763.8,
+     -792.7,
+     -796.3
+    ],
+    "ours_min": 1020.3,
+    "ours_max": 1020.3,
+    "base_min": -796.3,
+    "base_max": -763.8,
+    "axes_changed": false
+   }
+  ],
+  "pessimistic_combo": {
+   "inputs": {
+    "PHI_MAX": 0.26,
+    "LOAD": 0.7,
+    "CAR_OCC": 1.3,
+    "PT_KM_SCALE": 0.7
+   },
+   "ours_t": 0.0,
+   "base_t": -945.3,
+   "alloc_ours": {}
+  }
+ },
+ "phi_reference": {
+  "allocated_4": {
+   "n": 4,
+   "mean": 0.69,
+   "median": 0.72,
+   "min": 0.514,
+   "max": 0.805,
+   "w_alloc_trips_am": 0.666
+  },
+  "existing_28": {
+   "n": 28,
+   "mean": 0.325,
+   "median": 0.297,
+   "min": 0.077,
+   "max": 0.792,
+   "w_n_cur_am": 0.33,
+   "w_alloc_base_am": 0.327
+  },
+  "existing_seoul": {
+   "n": 19,
+   "mean": 0.267,
+   "median": 0.247,
+   "min": 0.077,
+   "max": 0.631,
+   "w_n_cur_am": 0.272,
+   "w_alloc_base_am": 0.274
+  },
+  "existing_nonseoul": {
+   "n": 9,
+   "mean": 0.446,
+   "median": 0.421,
+   "min": 0.199,
+   "max": 0.792,
+   "w_n_cur_am": 0.456,
+   "w_alloc_base_am": 0.449
+  },
+  "note": "비례 추출 φ = 축의 현재 승용차 통근 분담률 P_car(o,d) (axis_model 로짓, β=3.20, α_o는 출발 시군 30분+ 통근 승용차 분담률 s_car_30에 맞춤). 버스는 보통 대중교통 이용자를 비례 이상으로 끌어오므로(경기 산단 공동통근버스 φ 17%, 수원 똑버스 21.3%, 셔클 26.2%) 실제 φ의 상한 쪽 참고값이다. 모델 φ(phi_model)는 직행 후보 축에서 PHI_MAX=0.5로 잘린 값."
+ }
+}
