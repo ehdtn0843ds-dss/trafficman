@@ -74,11 +74,20 @@ function hero() {
     const v = Math.min(100, (m / 44) * 100);
     const t = Math.min(100, (mStar / 44) * 100);
     verdict.className = 'bus-verdict ' + (ok ? 'is-cut' : 'is-add');
+    // 출근 1회(회송 포함) 순감축. 0.5 kg 미만이면 반올림해 0이 되니 '거의 본전'이라고 말해요.
+    let kg = '';
+    if (N > 0) {
+      kg = Math.abs(netKg) < 0.5
+        ? ` ${be.AXIS_KM} km 축 기준 출근 1회(회송 포함)마다 거의 본전이에요.`
+        : ` ${be.AXIS_KM} km 축 기준 출근 1회(회송 포함)마다 약 ${Math.abs(netKg).toFixed(0)} kg CO₂가 ${netKg >= 0 ? '줄어요' : '늘어요'}.`;
+    }
+    const lead = N > 0
+      ? `이 탑승 인원에서 본전은 승용차 출신 <b>${fmt1(mStar)}명</b>이에요.${kg}`
+      : '버스는 빈 차로 달려도 연료를 써요. 탑승 인원을 올려 보세요.';
     verdict.innerHTML =
       `<strong class="verdict-head">${head}</strong>` +
       `<div class="meter${ok ? ' is-cut' : ''}" style="--v:${v}%;--t:${t}%" aria-hidden="true"><i></i><b></b></div>` +
-      `<p class="verdict-text">이 탑승 인원에서 본전은 승용차 출신 <b>${fmt1(mStar)}명</b>이에요.` +
-      (N > 0 ? ` ${be.AXIS_KM} km 축 기준 출근 1회(회송 포함)마다 약 ${Math.abs(netKg).toFixed(0)} kg CO₂가 ${netKg >= 0 ? '줄어요' : '늘어요'}.` : '') +
+      `<p class="verdict-text">${lead}` +
       `<small>보고서와 같은 모형이에요. 유니버스 디젤 3.49 km/L, 회송 1회, 승용차 재차 1.1명.</small></p>`;
 
     let matched = null;
@@ -196,17 +205,21 @@ function terms() {
     openBtn = b;
   };
   const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  let byClick = false, pointer = false;
+  let byClick = false;
+  // 터치·마우스로 누른 그 단어만 focus보다 click이 정하게 해요(눌렀는데 바로 닫히지 않게).
+  // 단어별로 기억하고, 키를 누르면 바로 풀어서 클릭 직후 Tab으로 옮겨 간 다음 단어는 정상으로 열려요.
+  let pressed = null, pressT = 0;
+  const release = () => { pressed = null; clearTimeout(pressT); };
+  document.addEventListener('keydown', release, true);
   btns.forEach((b) => {
     b.setAttribute('aria-expanded', 'false');
-    // 터치·마우스로 누를 때는 focus보다 click이 정하게 해요(눌렀는데 바로 닫히지 않게).
-    b.addEventListener('pointerdown', () => { pointer = true; setTimeout(() => { pointer = false; }, 700); });
+    b.addEventListener('pointerdown', () => { pressed = b; clearTimeout(pressT); pressT = setTimeout(release, 700); });
     b.addEventListener('click', (e) => {
       e.stopPropagation();
       if (openBtn === b && byClick) { close(); byClick = false; return; }
       open(b); byClick = true;
     });
-    b.addEventListener('focus', () => { if (!pointer) { open(b); byClick = false; } });
+    b.addEventListener('focus', () => { if (pressed !== b) { open(b); byClick = false; } });
     b.addEventListener('blur', () => { if (openBtn === b) close(); });
     if (fine) {
       b.addEventListener('mouseenter', () => { if (openBtn !== b) { open(b); byClick = false; } });

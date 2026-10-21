@@ -178,9 +178,10 @@ function thrControl() {
     thrT = Math.round(+inp.value * 100) / 100;
     out.textContent = thrT.toFixed(2);
     setFill();
-    const cand = D.top20.filter((a) => isCand(a, thrT)).length;
+    const candA = D.top20.filter((a) => isCand(a, thrT));
+    const cand = candA.length, candSeoul = candA.filter((a) => a.seoul).length;
     const routes = D.routes.filter((r) => r.pctr >= thrT).length;
-    res.innerHTML = `20개 축 중 버스 후보 <b>${cand}개</b>, 수요관리 <b>${20 - cand}개</b>예요. 현행 편하G 28개 노선 중 기준을 넘는 노선은 <b>${routes}개</b>예요.`;
+    res.innerHTML = `20개 축 중 버스 후보 <b>${cand}개</b>(서울행 ${candSeoul}개), 수요관리 <b>${20 - cand}개</b>예요. 현행 편하G 28개 노선 중 기준을 넘는 노선은 <b>${routes}개</b>예요.`;
     if (reset) reset.hidden = Math.abs(thrT - 1.5) < 1e-9;
     drawnAt['step-4'] = null;
     drawPanel($('#step-4'));
@@ -231,14 +232,15 @@ function vizDiag() {
   const el = $('#viz-diag');
   if (!el) return;
   const bins = [
+    // 머리 선 색: 수요관리는 서울행(파랑), 나머지는 중립. 주황은 '증편이 배분된 축' 칸에만 써요.
     { key: '수요관리', c: 'var(--seoul)', rule: 'PCTR 1.5 미만. 대중교통이 이미 경쟁력 있어요.' },
-    { key: 'DRT 연계', c: 'var(--car)', rule: '도보가 문제예요. 단지 안 정차 직행을 권해요.' },
+    { key: 'DRT 연계', c: 'var(--line-strong)', rule: '도보가 문제예요. 단지 안 정차 직행을 권해요.' },
     { key: '출퇴근 직행', c: 'var(--asphalt)', rule: '차 안 시간과 환승이 문제예요.' },
   ];
   el.innerHTML = bins.map((b) => {
     const items = D.top20.filter((a) => a.cls === b.key).sort((p, q) => q.car - p.car);
     return `<div class="bin" style="--c:${b.c}"><h4>${b.key} ${items.length}개</h4><p>${b.rule}</p><ul>` +
-      items.map((a) => `<li class="${a.trips ? 'is-alloc' : ''}${a.gbus ? ' is-gbus' : ''}">${esc(axisLabel(a))}${a.trips ? ` <span class="sr-only">(증편 ${a.trips}회 배분)</span>` : ''}${a.gbus ? ' <span class="sr-only">(현재 편하G 운행)</span>' : ''}</li>`).join('') +
+      items.map((a) => `<li class="${a.trips ? 'is-alloc' : ''}${a.gbus ? ' is-gbus' : ''}">${a.trips ? `<span>${esc(axisLabel(a))}</span><em><span class="sr-only">증편 </span>${a.trips}회<span class="sr-only"> 배분</span></em>` : esc(axisLabel(a))}${a.gbus ? ' <span class="sr-only">(현재 편하G 운행)</span>' : ''}</li>`).join('') +
       '</ul></div>';
   }).join('');
 }
@@ -300,15 +302,15 @@ function vizAlloc() {
   const sum = (rs) => rs.reduce((s, r) => s + r.am, 0);
   const cells = Array.from({ length: 50 }, () => { const i = document.createElement('i'); i.className = 'alloc-cell'; return i; });
   const READ = {
-    base: { cls: 'is-add', v: '−793', note: '연 793 t 증가예요. +는 감축, −는 증가예요.',
-      sr: `현행 방식: 출근 50회를 서울행 ${seoulR.length}개 노선에 ${sum(seoulR)}회, 경기 내부 ${ggR.length}개 노선에 ${sum(ggR)}회씩 1~2회로 나눠요. 연간 순감축 −793 tCO₂/년, 즉 연 793 t 증가예요.` },
-    ours: { cls: 'is-cut', v: '+1,020', note: '연 1,020 t 감축이에요. +는 감축, −는 증가예요.',
-      sr: `PCTR 기준: 출근 50회를 ${ours.map((a) => `${axisLabel(a)} ${a.trips}회`).join(', ')}로 4개 축에 모아요. 연간 순감축 +1,020 tCO₂/년, 즉 연 1,020 t 감축이에요.` },
+    base: { cls: 'is-add', v: '−793', note: '모형 기준값 · +는 감축, −는 증가',
+      sr: `현행 방식: 출근 50회를 서울행 ${seoulR.length}개 노선에 ${sum(seoulR)}회, 경기 내부 ${ggR.length}개 노선에 ${sum(ggR)}회씩 1~2회로 나눠요. 연간 순감축 −793 tCO₂/년이에요(−는 증가).` },
+    ours: { cls: 'is-cut', v: '+1,020', note: '모형 기준값 · +는 감축, −는 증가',
+      sr: `PCTR 기준: 출근 50회를 ${ours.map((a) => `${axisLabel(a)} ${a.trips}회`).join(', ')}로 4개 축에 모아요. 연간 순감축 +1,020 tCO₂/년이에요(+는 감축).` },
   };
   el.innerHTML =
     `<div class="alloc-head"><div class="toggle" role="group" aria-label="배분 방식">` +
     `<button type="button" data-mode="base" aria-pressed="true">현행 방식</button><button type="button" data-mode="ours" aria-pressed="false">PCTR 기준</button></div>` +
-    `<div class="readout readout--sm" id="alloc-ro"><span class="readout-label">연간 순감축 (모형 기준값)</span>` +
+    `<div class="readout" id="alloc-ro"><span class="readout-label">연간 순감축</span>` +
     `<span class="readout-value"><span class="v"></span><span class="readout-unit">tCO₂/년</span></span><span class="readout-note"></span></div></div>` +
     `<div class="alloc-field" aria-hidden="true"></div><p class="sr-only" aria-live="polite" id="alloc-sr"></p>` +
     `<ul class="key"><li><span class="sw sw--seoul"></span>현행 서울행 노선</li><li><span class="sw sw--seoul-light"></span>현행 경기 내부 노선</li><li><span class="sw sw--car"></span>PCTR 기준 산단 축</li></ul>`;
@@ -369,7 +371,7 @@ function vizAlloc() {
       });
     } else cells.forEach((c, i) => { c.style.transition = ''; c.style.transform = ''; c.className = colorOf(i); });
     const R = READ[next];
-    ro.className = `readout readout--sm ${R.cls}`;
+    ro.className = `readout ${R.cls}`;
     $('.v', ro).textContent = R.v;
     $('.readout-note', ro).textContent = R.note;
     sr.textContent = R.sr;
@@ -399,9 +401,11 @@ function vizMC() {
   g += `<line x1="${x(0)}" y1="${mid - hMax - 8}" x2="${x(0)}" y2="${mid + hMax + 8}" class="stroke-ink" stroke-width="1.5"/>`;
   g += `<line x1="${x(124)}" y1="${mid - hMax - 8}" x2="${x(124)}" y2="${mid}" stroke="#fff" stroke-width="1.5" stroke-dasharray="4 3"/>`;
   g += `<line x1="${x(-388)}" y1="${mid}" x2="${x(-388)}" y2="${mid + hMax + 8}" stroke="#fff" stroke-width="1.5" stroke-dasharray="4 3"/>`;
-  g += `<text x="${x(0) + 8}" y="${mid - hMax - 18}" class="data-label t-cut" style="font-size:13px">PCTR 기준 61%가 감축 쪽</text>`;
+  g += `<text x="${x(0) + 8}" y="${mid - hMax - 18}" class="data-label t-cut" style="font-size:13px">감축 쪽 →</text>`;
+  g += `<text x="${L}" y="${mid - 10}" class="data-label" style="font-size:12.5px">PCTR 기준</text>`;
   g += `<text x="${x(0) - 8}" y="${mid - hMax - 18}" text-anchor="end" class="axis-label">0 t</text>`;
-  g += `<text x="${x(0) - 8}" y="${mid + hMax + 26}" text-anchor="end" class="data-label t-add" style="font-size:13px">현행 방식 86%가 증가 쪽</text>`;
+  g += `<text x="${x(0) - 8}" y="${mid + hMax + 26}" text-anchor="end" class="data-label t-add" style="font-size:13px">← 증가 쪽</text>`;
+  g += `<text x="${L}" y="${mid + 20}" class="data-label" style="font-size:12.5px">현행 방식</text>`;
   (W >= 480 ? [-1500, -1000, -500, 500, 1000, 1500] : [-1000, 1000]).forEach((t) => { g += `<text x="${x(t)}" y="${H - 6}" text-anchor="middle" class="axis-label">${t > 0 ? '+' : ''}${fmt(t)}</text>`; });
   g += `<text x="${W - R}" y="${mid + hMax + 26}" text-anchor="end" class="axis-title">연간 순감축 (tCO₂/년)</text>`;
   g += '</svg>';
