@@ -25,11 +25,17 @@ export function init(model) {
   return M;
 }
 
-/** 브라우저: model.json을 fetch해서 등록 */
-export async function loadModel(url = "./data/model.json") {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`model.json 불러오기 실패: ${res.status}`);
-  return init(await res.json());
+/** 브라우저: model.json을 fetch해서 등록. 같은 주소는 한 번만 받아요(히어로·시뮬레이터·탐색기가 함께 씀). */
+const loading = new Map();
+export function loadModel(url = "./data/model.json") {
+  if (!loading.has(url)) {
+    loading.set(url, (async () => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`model.json 불러오기 실패: ${res.status}`);
+      return init(await res.json());
+    })());
+  }
+  return loading.get(url);
 }
 
 function need() {

@@ -13,6 +13,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/simulator.css">
+<link rel="stylesheet" href="css/explorer.css">
 <script>document.documentElement.classList.replace('no-js','js')</script>
 </head>
 <body>
@@ -383,8 +385,8 @@
 <section class="sec" id="simulator" aria-labelledby="simulator-title">
   <div class="wrap">
     <div class="sec-head">
-      <h2 id="simulator-title">직접 계산해 보기</h2>
-      <p class="sec-lede">회당 탑승, 승용차 출신 비율 φ, 연비, 회송을 바꾸면서 증편 100회의 연간 순감축이 어떻게 달라지는지 확인해 보세요.</p>
+      <h2 id="simulator-title">같은 100회, 어디에 넣을까</h2>
+      <p class="sec-lede">2030 증편 100회를 PCTR 기준 4개 축에 넣을 때와 현행 28개 노선에 나눌 때, 연간 탄소가 어떻게 달라지는지 직접 계산해 보세요. 예시 조건을 누르거나 슬라이더를 움직이면 결과가 바로 바뀌어요.</p>
     </div>
     <div class="mount" id="simulator-root" data-state="empty">
       <p class="mount-empty">시뮬레이터가 이 자리에 들어와요.</p>
@@ -397,7 +399,7 @@
   <div class="wrap">
     <div class="sec-head">
       <h2 id="explorer-title">20개 축 둘러보기</h2>
-      <p class="sec-lede">지도에서 축을 고르면 출발점 5곳의 통행시간과 PCTR, 진단 결과와 배분된 증편 횟수를 볼 수 있어요.</p>
+      <p class="sec-lede">분석한 20개 통근 축을 지도에 그렸어요. 축을 고르면 출발점 5곳의 통행시간과 PCTR, 진단 결과, 배분된 증편 횟수가 나오고, 그 축에 버스를 직접 넣어 볼 수도 있어요.</p>
     </div>
     <div class="mount" id="explorer-root" data-state="empty">
       <p class="mount-empty">축 지도 탐색기가 이 자리에 들어와요.</p>
@@ -579,5 +581,7 @@
 
 <script type="module" src="js/hero.js"></script>
 <script type="module" src="js/pipeline.js"></script>
+<script type="module" src="js/simulator.js"></script>
+<script type="module" src="js/explorer.js"></script>
 </body>
 </html>
