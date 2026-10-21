@@ -220,7 +220,7 @@ function start(OL) {
           <div class="ex-svgbox" id="ex-svgbox"><div class="ex-tip" id="ex-tip" hidden></div></div>
           <div class="ex-strip" id="ex-strip"></div>
           ${axisChips}
-          <p class="ex-hint" id="ex-map-hint">선 굵기는 승용차 통근자 수예요. 축 가까이를 누르면 가장 가까운 축을 골라요. 지도를 고른 뒤 화살표 키로 옮겨 다닐 수도 있어요. 고른 축은 출발 행정동 5곳(작은 원)도 보여요.</p>
+          <p class="ex-hint" id="ex-map-hint">선 굵기는 승용차 통근자 수예요. 축 가까이를 누르면 가장 가까운 축을 골라요. 축을 하나 고른 뒤 화살표 키로 옮겨 다닐 수도 있어요. 고른 축은 출발 행정동 5곳(작은 원)도 보여요.</p>
           <p class="ex-hint" id="ex-rt-hint" hidden>지도 범위는 20개 축에 맞췄어요. 가평에서 출발하는 노선(P7001)은 지도 오른쪽 밖에서 들어와요.</p>
           ${OL ? `<p class="ex-attr">배경 경계: 통계청 SGIS 행정동 경계(공공누리 제1유형)를 <a href="https://github.com/vuski/admdongkor">vuski/admdongkor</a>가 가공한 자료(CC BY 4.0)를 시군 단위로 합치고 단순화했어요. 경기 시군과 서울 자치구만 그렸어요.</p>` : ''}
         </div>
@@ -366,7 +366,7 @@ function start(OL) {
         ${cand ? `<div><dt>모형 φ (상한 0.5로 자름)</dt><dd>${a.model_phi.toFixed(2)}</dd></div>` : ''}
       </dl>
       <div class="ex-try">
-        <label class="ctl"><span class="ctl-label">이 축에 출근 n회 넣어 보기<small>퇴근도 같은 횟수${a.alloc_am ? ` · 처음 값은 보고서 배분 ${a.alloc_am}회` : ''}</small></span>
+        <label class="ctl"><span class="ctl-label">이 축에 출근 n회 넣어 보기<small>퇴근도 같은 횟수 · 처음 값은 ${a.alloc_am ? `보고서 배분 ${a.alloc_am}회` : cand ? '예시 5회(보고서 배분 없음)' : '0회(수요관리)'}</small></span>
           <input class="range" type="range" id="ex-try-n" min="0" max="15" step="1">
           <output class="ctl-out" id="ex-try-n-out" for="ex-try-n"></output></label>
         <div class="ex-try-out">
@@ -605,7 +605,13 @@ function start(OL) {
   }
   fromSel.addEventListener('change', () => { fillDests(); updateFinder(); });
   toSel.addEventListener('change', updateFinder);
-  refreshFinder = () => { if (found && found.id === sel.id) findOut.querySelector('p').innerHTML = findText(found); };
+  refreshFinder = () => {
+    if (!found) return;
+    if (found.id === sel.id) { findOut.querySelector('p').innerHTML = findText(found); return; }
+    mapEl.classList.remove('has-find');
+    const s = findOut.querySelector('.ex-find-sub');
+    if (s) s.textContent = '지금은 지도에서 다른 축을 보고 있어요. 다시 보려면 목적지를 다시 골라 주세요.';
+  };
 
   // 지도는 실제 너비로 그려요. 너비가 꽤 바뀌면 다시 그려요
   buildMap();

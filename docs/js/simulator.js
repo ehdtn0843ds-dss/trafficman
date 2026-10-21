@@ -57,7 +57,7 @@ function start() {
     { id: 'same', group: 'report', label: '표4처럼 같은 조건', mp: 'direct', mb: 'direct', common: true, Np: 44, phip: 0.5, Nb: 44, phib: 0.5, ...PHYS0,
       note: '<b>보고서 표4</b>의 균일 가정이에요. 두 방식에 똑같이 회당 44명·φ 0.5를 줬어요.' },
     { id: 'uni', group: 'page', label: '현행 전 노선 균일 19.5명', mp: 'model', mb: 'direct', common: false, Np: 44, phip: 0.5, Nb: 19.5, phib: 0.25, ...PHYS0,
-      note: `<b>보고서에 없는, 이 페이지에서 계산한 값</b>이에요. 현행 28개 노선 모두에 회당 19.5명·φ 0.25를 똑같이 줬어요. 노선마다 수요가 다른 보고서 기준값(−793)과 달리 −768 ${UNIT}가 나와요. PCTR 쪽은 모형 수요 그대로예요.` },
+      note: `<b>보고서에 없는, 이 페이지에서 계산한 값</b>이에요. 현행 28개 노선 모두에 회당 19.5명·φ 0.25를 똑같이 줬어요. 노선마다 수요가 다른 보고서 기준값(−793)과 달리 −768 ${UNIT}이 나와요. PCTR 쪽은 모형 수요 그대로예요.` },
     { id: 'fcev', group: 'page', label: '수소버스 전환', mp: 'model', mb: 'model', common: false, Np: 44, phip: 0.5, Nb: 19.5, phib: 0.25, ...PHYS0, vehicle: 'fcev',
       note: '<b>보고서에 없는, 이 페이지에서 계산한 값</b>이에요. 차량을 유니버스 수소전기버스(승객 44석, 28.0 km/kg, 개질 수소 9.2 kgCO₂/kg)로 바꾸고 모형 수요로 다시 계산했어요. 보고서는 수소버스의 본전(φ 0.25에서 23.3명)까지만 다뤄요. 수소 배출계수를 0(부생수소)까지 내려 볼 수 있어요.' },
     { id: 'pess', group: 'page', label: '비관 조합', snap: true, mp: 'model', mb: 'model', common: false, Np: 44, phip: 0.5, Nb: 19.5, phib: 0.25, ...PHYS0, occ: 1.3,
@@ -416,7 +416,7 @@ function start() {
                     : '두 방식의 탑승·φ를 <b>따로 직접</b> 정했어요. 배분은 보고서와 같게 고정했어요(PCTR 4개 축 15/15/15/5회, 현행 28개 노선 비례).')
         : S.mp === 'model' && S.mb === 'model'
           ? '<b>모형 수요</b>로 계산하고 있어요. 차량 조건을 바꾸면 PCTR 기준은 회차 배분까지 다시 계산해요.'
-          : `PCTR 기준은 <b>${sideTxt(S.mp)}</b>, 현행 방식은 <b>${sideTxt(S.mb)}</b>으로 계산하고 있어요. 건드리지 않은 쪽은 모형 수요를 그대로 써요.`;
+          : `PCTR 기준은 <b>${sideTxt(S.mp)}</b>, 현행 방식은 <b>${sideTxt(S.mb)}</b>${S.mb === 'model' ? '로' : '으로'} 계산하고 있어요. 건드리지 않은 쪽은 모형 수요를 그대로 써요.`;
     $('#sim-hint-n').innerHTML = S.snap ? '비관 조합은 보고서 밖 계산 결과라 탑승·φ를 바꿀 수 없어요.'
       : (S.mp === 'model' || S.mb === 'model')
         ? '모형 수요를 쓰는 쪽은 축·노선마다 모형이 정한 탑승과 φ를 써요. 한쪽 슬라이더를 움직이면 <b>그쪽만</b> 모든 축(노선)에 같은 값을 주는 균일 가정으로 바뀌어요.'
@@ -450,7 +450,7 @@ function start() {
     if (res.snap) { head = `PCTR 기준은 버스를 넣지 않고(0), 현행 방식은 ${int(-bt)} ${UNIT} 늘려요`; cls = 'is-even'; }
     else if (Math.abs(d) < 5) { head = '두 방식의 결과가 거의 같아요'; cls = 'is-even'; }
     else if (d > 0) {
-      if (ot >= 0.5 && bt <= -0.5) head = `PCTR 기준은 줄이고 현행 방식은 늘려요. 차이는 ${ad} ${UNIT}예요`;
+      if (ot >= 0.5 && bt <= -0.5) head = `PCTR 기준은 줄이고 현행 방식은 늘려요. 차이는 ${ad} ${UNIT}이에요`;
       else if (ot < 0.5) head = `두 방식 모두 탄소가 늘지만, PCTR 기준이 ${ad} ${UNIT} 덜 늘어요`;
       else head = `이 조건에서는 PCTR 기준이 ${ad} ${UNIT} 더 줄여요`;
       cls = ot >= 0.5 ? 'is-cut' : 'is-add';

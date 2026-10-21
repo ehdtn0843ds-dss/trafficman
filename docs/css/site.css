@@ -490,7 +490,7 @@ table.data caption{text-align:left;font-size:var(--fs-xs);color:var(--muted);cap
 .gain .track span{position:absolute;left:calc(var(--b) + 8px);top:0;line-height:18px;white-space:nowrap;color:var(--ink-2);font-variant-numeric:tabular-nums}
 
 /* 제안: 한 줄 제목 + 접는 상세 */
-.props{list-style:none;margin:0;padding:0;counter-reset:row;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--s6);border-top:1px solid var(--line)}
+.props{list-style:none;margin:0;padding:0;counter-reset:row;display:grid;align-items:start;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--s6);border-top:1px solid var(--line)}
 .props li{border-bottom:1px solid var(--line)}
 .props summary{display:grid;grid-template-columns:2em minmax(0,1fr) 20px;gap:var(--s2);align-items:start;padding:var(--s3) 0;cursor:pointer;list-style:none;line-height:1.55}
 .props summary::-webkit-details-marker{display:none}

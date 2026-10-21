@@ -469,6 +469,7 @@ function stepper() {
     select(cur + 1, { scroll: true });
   });
   let rz;
+  window.addEventListener('beforeprint', () => panels.forEach(p => { p.hidden = false; try { drawPanel(p); } catch (e) {} }));
   window.addEventListener('resize', () => { placeBus(); clearTimeout(rz); rz = setTimeout(() => drawPanel(panels[cur]), 150); });
   document.fonts?.ready.then(placeBus);
   select(0);

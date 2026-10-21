@@ -275,7 +275,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
         <div class="stage-text">
           <p class="stage-count">6 / 9 원인 진단</p>
           <h3>왜 느린지에 따라 처방이 달라요</h3>
-          <p>위 조건부터 차례로 판정했어요. 승용차 통근자 3,000명 미만은 보류, PCTR 1.5 미만은 수요관리, 평균 도보 20분 이상 또는 30% 이상은 DRT 연계, 나머지는 출퇴근 직행이에요.</p>
+          <p>다음 조건을 위에서부터 차례로 판정했어요. 승용차 통근자 3,000명 미만은 보류, PCTR 1.5 미만은 수요관리, 평균 도보 20분 이상 또는 30% 이상은 DRT 연계, 나머지는 출퇴근 직행이에요.</p>
           <p>DRT 연계 축에서도 똑버스 평균 대기 14분이 도보를 줄여 얻는 이득보다 길었어요(대기 임계 7.4~11.3분). 그래서 이 축들에도 아파트 단지 안에 서는 직행버스를 권해요.</p>
           <dl class="facts">
             <div><dt>수요관리 (서울행 10개 모두)</dt><dd>11<small>개</small></dd></div>
@@ -324,7 +324,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
       <article class="stage-panel" id="step-8" role="tabpanel" aria-labelledby="tab-8" tabindex="0" hidden>
         <div class="stage-text">
           <p class="stage-count">8 / 9 증편 배분</p>
-          <h3>2030 증편 100회를 탄소를 가장 많이 줄이는 축부터</h3>
+          <h3>2030 증편 100회, 탄소를 가장 많이 줄이는 축부터</h3>
           <p>도 계획의 100회는 출근 50회와 퇴근 50회예요. 출근 50회를 한 회씩, 탄소를 가장 많이 줄이는 축에 넣었고(축당 최대 15회) 퇴근은 대칭 운행으로 계산했어요. 현행 방식은 현 28개 노선에 지금 운행 비율대로 나눈 경우예요.</p>
           <p>수요는 현행 편하G 실적(2022년 연 32만 건)과 φ&nbsp;0.25에 맞춰 보정했어요.</p>
           <dl class="facts">
@@ -427,7 +427,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
     <div class="split" style="margin-top:var(--s6)">
       <div>
         <h3>회당 탑승 × φ를 바꿔 다시 계산하면 (보고서 표4)</h3>
-        <p class="note" style="margin-bottom:var(--s2)">칸마다 위는 PCTR 기준, 아래는 같은 조건의 현행 방식이에요. 굵은 테두리가 모형 기준값이고, 칸을 누르면 시뮬레이터에서 그 조건을 볼 수 있어요.</p>
+        <p class="note" style="margin-bottom:var(--s2)">칸마다 위는 PCTR 기준, 아래는 같은 조건의 현행 방식이에요. 굵은 테두리가 PCTR 기준의 모형 기준값(44명 × 0.5)이고, 칸을 누르면 시뮬레이터에서 그 조건을 볼 수 있어요.</p>
         <div class="tablewrap">
           <table class="heat">
             <caption class="sr-only">회당 탑승과 φ별 연간 순감축(tCO₂/년). +는 감축, −는 증가</caption>
@@ -516,7 +516,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
   <div class="wrap">
     <div class="sec-head">
       <h2 id="limits-title">아직 확인이 필요한 부분</h2>
-      <p class="sec-lede">결론의 크기를 가장 크게 흔드는 건 승용차 출신 비율 φ예요.</p>
+      <p class="sec-lede">결론을 가장 크게 흔드는 건 승용차 출신 비율 φ예요.</p>
     </div>
     <ul class="limits">
       <li><b>승용차 출신 비율 φ</b><p>편하G 이용자의 이전 수단 설문이 없어 φ 0.25는 비슷한 서비스의 설문 값, 상한 0.5는 GTX-A 승용차 전환율 사례로 대신했어요. 배분 축 목적지 대기업은 자체 통근버스가 있어 φ와 수요가 과대일 수 있어요.</p></li>
@@ -553,7 +553,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
       </div>
       <div>
         <h3>AI는 이렇게 썼어요</h3>
-        <p>Anthropic Claude(Claude 앱의 에이전트 작업)와 함께했어요. 문제의식, PCTR로 대상지를 고르자는 아이디어, 분석 방향과 결과 검토는 팀이 맡았고, Claude는 선행 조사, 전처리, 카카오 조회 자동화, 모델·민감도 코드, 근거 조사, 시각화를 함께했어요. 페이지의 모든 수치는 저장소의 코드를 실행한 결과예요.</p>
+        <p>Anthropic Claude(Claude 앱의 에이전트 작업)와 함께했어요. 문제의식, PCTR로 대상지를 고르자는 아이디어, 분석 방향과 결과 검토는 팀이 맡았고, Claude는 선행 조사, 전처리, 카카오 조회 자동화, 모델·민감도 코드, 근거 조사, 시각화를 맡았어요. 페이지의 모든 수치는 저장소의 코드를 실행한 결과예요.</p>
         <p>팀 버스타G</p>
       </div>
     </div>
