@@ -1,0 +1,315 @@
+{
+ "method": "닫힌 식(scenario_grid.t_year), 배분 고정(PCTR 4축 출근 50회 / 현행 28노선 출근 50회), 퇴근 대칭 ×2, 근무일 245",
+ "n_draws": 20000,
+ "seed": 20261021,
+ "distributions": {
+  "N_p": {
+   "dist": "uniform",
+   "low": 20,
+   "high": 44
+  },
+  "phi_p": {
+   "dist": "uniform",
+   "low": 0.17,
+   "high": 0.6
+  },
+  "N_b": {
+   "dist": "uniform",
+   "low": 15,
+   "high": 25
+  },
+  "phi_b": {
+   "dist": "uniform",
+   "low": 0.15,
+   "high": 0.35
+  },
+  "COACH_KMPL": {
+   "dist": "uniform",
+   "low": 2.83,
+   "high": 4.0
+  },
+  "R_DH": {
+   "dist": "uniform",
+   "low": 0.0,
+   "high": 1.0
+  },
+  "CAR_OCC": {
+   "dist": "uniform",
+   "low": 1.1,
+   "high": 1.4
+  }
+ },
+ "shared_inputs": "COACH_KMPL·R_DH·CAR_OCC는 같은 시행에서 두 방식에 같은 값(공통 물리량), N·φ는 방식별 독립",
+ "bus_km_per_day": {
+  "pctr": 1463.5,
+  "base": 1960.3,
+  "pctr_avg_km": 29.3,
+  "base_avg_km": 39.2
+ },
+ "kmpl_lookup": {
+  "grid": [
+   2.83,
+   3.1225,
+   3.415,
+   3.7075,
+   4.0
+  ],
+  "C0": [
+   0.9585,
+   0.8766,
+   0.8087,
+   0.7515,
+   0.7026
+  ],
+  "CDH": [
+   0.7556,
+   0.6846,
+   0.6258,
+   0.5763,
+   0.534
+  ],
+  "CPAX": [
+   0.00279,
+   0.00249,
+   0.00224,
+   0.00203,
+   0.00185
+  ],
+  "eta": [
+   0.2739,
+   0.307,
+   0.3412,
+   0.3765,
+   0.4129
+  ],
+  "car_trip_kg_per_km_occ1": 0.1462,
+  "interp_error_at_3p49": {
+   "C0": 1.226385508878991e-05,
+   "CDH": 1.0622916314040332e-05,
+   "CPAX": 4.507818156598842e-08
+  }
+ },
+ "main": {
+  "P_pctr_gt_0": 0.609,
+  "P_base_lt_0": 0.99,
+  "P_pctr_gt_base": 0.977,
+  "P_base_gt_0": 0.01,
+  "P_pctr_gt_base_and_pctr_gt_0": 0.608,
+  "P_both_lt_0_pctr_less_bad": 0.369,
+  "pctr_t": {
+   "p5": -471,
+   "p50": 124,
+   "p95": 973
+  },
+  "base_t": {
+   "p5": -1003,
+   "p50": -564,
+   "p95": -145
+  },
+  "diff_t": {
+   "p5": 97,
+   "p50": 694,
+   "p95": 1525
+  },
+  "mean": {
+   "pctr": 172,
+   "base": -568,
+   "diff": 739
+  },
+  "spearman_pctr": {
+   "N_p": 0.464,
+   "phi_p": 0.773,
+   "COACH_KMPL": 0.199,
+   "R_DH": -0.302,
+   "CAR_OCC": -0.144
+  },
+  "spearman_diff": {
+   "N_p": 0.465,
+   "phi_p": 0.778,
+   "N_b": -0.174,
+   "phi_b": -0.3,
+   "COACH_KMPL": -0.044,
+   "R_DH": 0.09,
+   "CAR_OCC": -0.059
+  }
+ },
+ "variants": {
+  "equal_phi_U(0.15,0.6)": {
+   "P_pctr_gt_0": 0.587,
+   "P_base_lt_0": 0.762,
+   "P_pctr_gt_base": 0.961,
+   "P_base_gt_0": 0.238,
+   "P_pctr_gt_base_and_pctr_gt_0": 0.558,
+   "P_both_lt_0_pctr_less_bad": 0.403,
+   "pctr_t": {
+    "p5": -508,
+    "p50": 99,
+    "p95": 965
+   },
+   "base_t": {
+    "p5": -897,
+    "p50": -301,
+    "p95": 370
+   },
+   "diff_t": {
+    "p5": 29,
+    "p50": 408,
+    "p95": 917
+   },
+   "mean": {
+    "pctr": 148,
+    "base": -285,
+    "diff": 433
+   },
+   "phi_common": [
+    "U",
+    0.15,
+    0.6
+   ]
+  },
+  "equal_phi_U(0.15,0.35)": {
+   "P_pctr_gt_0": 0.234,
+   "P_base_lt_0": 0.988,
+   "P_pctr_gt_base": 0.993,
+   "P_base_gt_0": 0.012,
+   "P_pctr_gt_base_and_pctr_gt_0": 0.233,
+   "P_both_lt_0_pctr_less_bad": 0.759,
+   "pctr_t": {
+    "p5": -606,
+    "p50": -203,
+    "p95": 275
+   },
+   "base_t": {
+    "p5": -1001,
+    "p50": -563,
+    "p95": -148
+   },
+   "diff_t": {
+    "p5": 111,
+    "p50": 370,
+    "p95": 673
+   },
+   "mean": {
+    "pctr": -190,
+    "base": -568,
+    "diff": 378
+   },
+   "phi_common": [
+    "U",
+    0.15,
+    0.35
+   ]
+  },
+  "equal_N_U(15,25)": {
+   "P_pctr_gt_0": 0.248,
+   "P_base_lt_0": 0.99,
+   "P_pctr_gt_base": 0.924,
+   "P_base_gt_0": 0.01,
+   "P_pctr_gt_base_and_pctr_gt_0": 0.247,
+   "P_both_lt_0_pctr_less_bad": 0.677,
+   "pctr_t": {
+    "p5": -644,
+    "p50": -210,
+    "p95": 284
+   },
+   "base_t": {
+    "p5": -1003,
+    "p50": -562,
+    "p95": -148
+   },
+   "diff_t": {
+    "p5": -48,
+    "p50": 370,
+    "p95": 795
+   },
+   "mean": {
+    "pctr": -197,
+    "base": -568,
+    "diff": 370
+   },
+   "N_common": [
+    "U",
+    15,
+    25
+   ]
+  },
+  "equal_N_U(20,44)": {
+   "P_pctr_gt_0": 0.608,
+   "P_base_lt_0": 0.766,
+   "P_pctr_gt_base": 0.845,
+   "P_base_gt_0": 0.234,
+   "P_pctr_gt_base_and_pctr_gt_0": 0.569,
+   "P_both_lt_0_pctr_less_bad": 0.276,
+   "pctr_t": {
+    "p5": -475,
+    "p50": 127,
+    "p95": 972
+   },
+   "base_t": {
+    "p5": -815,
+    "p50": -271,
+    "p95": 356
+   },
+   "diff_t": {
+    "p5": -233,
+    "p50": 421,
+    "p95": 1118
+   },
+   "mean": {
+    "pctr": 172,
+    "base": -255,
+    "diff": 427
+   },
+   "N_common": [
+    "U",
+    20,
+    44
+   ]
+  },
+  "equal_N_and_phi": {
+   "P_pctr_gt_0": 0.512,
+   "P_base_lt_0": 0.488,
+   "P_pctr_gt_base": 0.488,
+   "P_base_gt_0": 0.512,
+   "P_pctr_gt_base_and_pctr_gt_0": 0.0,
+   "P_both_lt_0_pctr_less_bad": 0.488,
+   "pctr_t": {
+    "p5": -572,
+    "p50": 12,
+    "p95": 917
+   },
+   "base_t": {
+    "p5": -766,
+    "p50": 16,
+    "p95": 1229
+   },
+   "diff_t": {
+    "p5": -311,
+    "p50": -4,
+    "p95": 194
+   },
+   "mean": {
+    "pctr": 72,
+    "base": 97,
+    "diff": -24
+   },
+   "N_common": [
+    "U",
+    15,
+    44
+   ],
+   "phi_common": [
+    "U",
+    0.15,
+    0.6
+   ]
+  }
+ },
+ "closed_form_check": {
+  "pctr_44_0p5": 1020.3,
+  "base_19p5_0p25": -768.4,
+  "allocation_json_ours": 1020.3,
+  "allocation_json_base": -792.7,
+  "note": "현행 방식 −793 t는 노선별 수요 모형(노선마다 다른 D·φ) 결과라 균일 19.5명·φ0.25 닫힌 식과 약간 다르다"
+ }
+}

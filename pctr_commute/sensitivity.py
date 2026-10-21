@@ -4,7 +4,7 @@ import axis_model as m
 
 BASE = dict(THETA=m.THETA, TARGET_PHI=m.TARGET_PHI, TARGET_RIDE=m.TARGET_RIDE, R_DH=m.R_DH, MAX_TRIPS=m.MAX_TRIPS,
             DRT_WAIT=m.DRT_WAIT, COACH_KMPL=m.COACH_KMPL, COACH_CAP=m.COACH_CAP, VAN_KMPL=m.VAN_KMPL, PHI_MAX=m.PHI_MAX, DETOUR=m.DETOUR,
-            ACCESS_DIRECT=m.ACCESS_DIRECT, LOAD=m.LOAD, CAR_OCC=m.CAR_OCC, PT_KM_SCALE=m.PT_KM_SCALE)
+            ACCESS_DIRECT=m.ACCESS_DIRECT, LOAD=m.LOAD, CAR_OCC=m.CAR_OCC, PT_KM_SCALE=m.PT_KM_SCALE, BETA=m.BETA)
 GRID = {
     "THETA": [0.05, 0.10, 0.15],
     "TARGET_PHI": [0.17, 0.25, 0.26],
@@ -20,6 +20,7 @@ GRID = {
     "LOAD": [0.7, 1.0],
     "CAR_OCC": [1.1, 1.3],
     "PT_KM_SCALE": [0.7, 1.0],
+    "BETA": [2.37, 3.20, 3.31],   # fit_beta.py 변형: 비가중 로짓 OLS 2.37 · 가중 3.20(기준) · 가중 NLS 3.31 (α_o는 main()에서 자동 재보정)
 }
 
 

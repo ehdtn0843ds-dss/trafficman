@@ -278,7 +278,8 @@ def fig5():
     NAME = {"THETA": "θ 대중교통 이동 비율", "TARGET_PHI": "현행 노선 φ 보정값", "TARGET_RIDE": "현행 회당 탑승 보정값",
             "R_DH": "r 회송 비율", "MAX_TRIPS": "축당 상한 (회)", "DRT_WAIT": "DRT 대기 (분)", "COACH_KMPL": "디젤버스 연비 (km/L)", "COACH_CAP": "직행 정원 (석)",
             "PHI_MAX": "φ 상한", "DETOUR": "직행 차내시간 비율", "ACCESS_DIRECT": "정류장 접근 (분)",
-            "LOAD": "새 회차 탑승률 상한", "CAR_OCC": "승용차 재차인원 (명)", "PT_KM_SCALE": "평택→화성 축 길이 배율"}
+            "LOAD": "새 회차 탑승률 상한", "CAR_OCC": "승용차 재차인원 (명)", "PT_KM_SCALE": "평택→화성 축 길이 배율",
+            "BETA": "β 적합 방식"}
     df = pd.DataFrame(sens)
     XL = (min(df.base_t.min(), df.ours_t.min()) - 150, max(df.ours_t.max(), df.base_t.max()) + 150)
     keys = list(NAME)
@@ -326,8 +327,41 @@ def fig6():
     save(fig, "fig6_census_logit.png")
 
 
+# ───────────── 그림 7: 가설 점검 (비례 추출 φ, 결합 불확실성) ─────────────
+def fig7():
+    ax_ = pd.read_csv(P / "result/phi_proxy_axes.csv"); rt = pd.read_csv(P / "result/phi_proxy_routes.csv")
+    mc = np.load(P / "result/montecarlo_draws.npz"); mj = json.load(open(P / "result/montecarlo.json", encoding="utf-8"))["main"]
+    fig = plt.figure(figsize=(W, W * 0.5))
+    gs = fig.add_gridspec(1, 2, width_ratios=[1, 1.15], wspace=0.32)
+    a1 = fig.add_subplot(gs[0])
+    se = rt[rt.seoul]; gg = rt[~rt.seoul]
+    a1.scatter(se.PCTR_route, se.phi_proxy_route, s=22, facecolor="white", edgecolor=ORANGE, lw=1.1, label="현행 편하G (서울행)", zorder=3)
+    a1.scatter(gg.PCTR_route, gg.phi_proxy_route, s=22, color=ORANGE, edgecolor="white", lw=0.6, label="현행 편하G (경기 내)", zorder=3)
+    c9 = ax_[~ax_.allocated]; c4 = ax_[ax_.allocated]
+    a1.scatter(c9.PCTR, c9.phi_proxy, s=26, color=BLUE, edgecolor="white", lw=0.6, label="버스 후보 축", zorder=4)
+    a1.scatter(c4.PCTR, c4.phi_proxy, s=40, color=BLUE, edgecolor="#111827", lw=1.0, label="배분 4개 축", zorder=5)
+    for y, t in ((0.257, "44명 만석 손익분기 φ 0.26"), (0.559, "19.5명 탑승 손익분기 φ 0.56")):
+        a1.axhline(y, color=GRAY, lw=0.7, ls=(0, (3, 2)))
+        a1.text(0.67, y + 0.015, t, ha="left", fontsize=6.3, color=MUTED)
+    a1.set_xscale("log"); a1.set_xticks([0.7, 1, 1.5, 2, 3]); a1.set_xticklabels(["0.7", "1", "1.5", "2", "3"]); a1.minorticks_off()
+    a1.set_xlim(0.65, 3.1); a1.set_ylim(0, 1)
+    a1.set_xlabel("PCTR (노선·축 실측)"); a1.set_ylabel("비례 추출 φ (현재 승용차 분담)")
+    a1.set_title("(a) 승용차 출신 비율 참고값", loc="left", fontsize=8.5)
+    grid(a1, "y"); a1.legend(fontsize=6.2, loc="upper left", frameon=False, handletextpad=0.2)
+    a2 = fig.add_subplot(gs[1])
+    bins = np.linspace(-1300, 1600, 59)
+    a2.hist(mc["base_t"], bins=bins, color=ORANGE, alpha=0.75, label=f"현행 방식 (증가 확률 {mj['P_base_lt_0']*100:.0f}%)")
+    a2.hist(mc["pctr_t"], bins=bins, color=BLUE, alpha=0.7, label=f"PCTR 기준 (감축 확률 {mj['P_pctr_gt_0']*100:.0f}%)")
+    a2.axvline(0, color=INK2, lw=0.9)
+    for v, col in ((mj["pctr_t"]["p50"], BLUE), (mj["base_t"]["p50"], ORANGE)):
+        a2.axvline(v, color=col, lw=1.0, ls=(0, (2, 2)))
+    a2.set_xlabel("연간 순감축 (t CO₂, +는 감축)"); a2.set_ylabel("빈도 (2만 회 중)")
+    a2.set_title("(b) 탑승·φ·연비·회송·재차인원 동시 변화", loc="left", fontsize=8.5)
+    grid(a2, "y"); a2.legend(fontsize=6.4, loc="upper right", frameon=False)
+    save(fig, "fig7_hypothesis.png")
+
 if __name__ == "__main__":
-    which = sys.argv[1:] or ["1", "2", "3", "4", "5", "6"]
+    which = sys.argv[1:] or ["1", "2", "3", "4", "5", "6", "7"]
     for w in which:
         try:
             globals()[f"fig{w}"]()
