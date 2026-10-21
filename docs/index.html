@@ -1,362 +1,583 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" class="no-js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>버스타G · 버스를 어디에 넣어야 승용차가 줄어들까</title>
-<meta name="description" content="경기도 출퇴근 버스를 어디에 넣어야 승용차 통근이 실제로 줄어드는지, 통근 데이터와 실제 통행시간으로 따져 본 분석.">
+<title>버스타G: 버스를 어디에 넣어야 승용차가 줄어들까</title>
+<meta name="description" content="경기도 출퇴근 버스를 어디에 넣어야 승용차 통근이 실제로 줄어드는지, 국민연금 통근 데이터와 실제 통행시간, 차량 동역학 탄소 모델로 따져 본 분석.">
+<meta name="theme-color" content="#1E2830">
+<meta property="og:title" content="버스타G: 버스를 어디에 넣어야 승용차가 줄어들까">
+<meta property="og:description" content="버스 1회가 탄소를 줄이려면 회당 승용차 출신 승객이 약 11명 넘어야 해요. 그 기준으로 경기도 2030 증편 100회를 다시 배분했어요.">
+<meta property="og:image" content="assets/banner.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --asphalt:#1E2830;   /* 본문 글자, 진한 면 */
-  --panel:#EDF1F4;     /* 정류장 안내판 같은 옅은 회청색 */
-  --white:#FFFFFF;
-  --line:#C6D0D8;
-  --car:#EB6834;       /* 승용차 출신 승객 · 경기 내부 (보고서 그림과 같은 색) */
-  --transit:#7FA3C6;   /* 대중교통 출신 승객 */
-  --seoul:#2A78D6;     /* 서울행 */
-  --cut:#13865F;       /* 순감축 */
-  --add:#C2362B;       /* 순증가 */
-  --muted:#5B6873;
-  --display:"Black Han Sans",sans-serif;
-  --body:"IBM Plex Sans KR",sans-serif;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
-body{margin:0;background:var(--white);color:var(--asphalt);font-family:var(--body);font-size:17px;line-height:1.75;word-break:keep-all;overflow-wrap:break-word}
-a{color:var(--seoul);text-underline-offset:3px}
-a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--car);outline-offset:3px}
-.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
-.prose{max-width:680px}
-
-/* 상단 띠: 버스 행선지 표시판 */
-.sign{background:var(--asphalt);color:#fff}
-.sign .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-top:12px;padding-bottom:12px;font-size:14px}
-.sign b{font-family:var(--display);font-weight:400;font-size:18px;letter-spacing:.02em}
-.sign nav{display:flex;gap:18px;flex-wrap:wrap}
-.sign nav a{color:#fff;text-decoration:none;opacity:.85}
-.sign nav a:hover{opacity:1;text-decoration:underline}
-
-/* 히어로 */
-.hero{background:var(--panel);border-bottom:1px solid var(--line)}
-.hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:48px;padding-top:64px;padding-bottom:64px;align-items:center}
-h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,4.6vw,54px);line-height:1.22;margin:0 0 20px;letter-spacing:-.01em}
-.lede{font-size:18px;color:#33414c;margin:0 0 28px;max-width:30em}
-.meta{font-size:14px;color:var(--muted);margin:0}
-.meta a{color:var(--asphalt)}
-
-/* 좌석 배치도 */
-.bus{background:var(--white);border:2px solid var(--asphalt);border-radius:28px 56px 56px 28px;padding:22px 26px 22px 22px;position:relative}
-.bus-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;font-size:14px;color:var(--muted)}
-.seats{display:grid;grid-template-columns:repeat(11,1fr);grid-template-rows:repeat(2,auto) 14px repeat(2,auto);gap:6px}
-.aisle{grid-column:1/-1;border-top:1px dashed var(--line);align-self:center}
-.seat{aspect-ratio:1/1.08;border-radius:6px 6px 3px 3px;border:1.5px solid var(--line);background:var(--white);transition:background-color .25s,border-color .25s}
-.seat.car{background:var(--car);border-color:var(--car)}
-.seat.transit{background:var(--transit);border-color:var(--transit)}
-.legend{display:flex;gap:18px;flex-wrap:wrap;margin:14px 0 4px;font-size:14px;color:var(--muted)}
-.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.controls{display:grid;gap:12px;margin-top:16px}
-.controls label{display:grid;grid-template-columns:8.5em 1fr 4.2em;align-items:center;gap:12px;font-size:15px}
-.controls output{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
-input[type=range]{width:100%;accent-color:var(--asphalt)}
-.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
-.presets button{font:inherit;font-size:14px;border:1.5px solid var(--asphalt);background:var(--white);color:var(--asphalt);border-radius:999px;padding:5px 14px;cursor:pointer}
-.presets button[aria-pressed=true]{background:var(--asphalt);color:#fff}
-.verdict{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:16px;min-height:5.2em}
-.verdict strong{font-family:var(--display);font-weight:400;font-size:22px;display:block;line-height:1.35}
-.verdict .cut{color:var(--cut)} .verdict .add{color:var(--add)}
-.verdict small{color:var(--muted);font-size:13px;display:block;margin-top:4px}
-
-/* 본문 */
-section{padding:72px 0;border-bottom:1px solid var(--line)}
-h2{font-family:var(--display);font-weight:400;font-size:clamp(26px,3vw,34px);line-height:1.3;margin:0 0 18px}
-h3{font-size:19px;margin:36px 0 8px;line-height:1.45}
-p{margin:0 0 16px}
-.figure{margin:28px 0}
-.figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:4px;background:#fff}
-.figure figcaption{font-size:14px;color:var(--muted);margin-top:8px}
-.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start}
-
-/* PCTR 공식 */
-.formula{font-family:var(--display);font-size:clamp(22px,2.6vw,30px);line-height:1.5;margin:24px 0;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-.frac{display:inline-grid;text-align:center}
-.frac span:first-child{border-bottom:3px solid var(--asphalt);padding:0 6px 4px}
-.frac span:last-child{padding:4px 6px 0}
-
-/* 노선도식 결과 목록: 결과 1~5는 순서가 있는 발견이라 정류장 번호를 붙인다 */
-.route{list-style:none;margin:32px 0 0;padding:0;position:relative}
-.route::before{content:"";position:absolute;left:15px;top:8px;bottom:8px;width:6px;border-radius:3px;background:var(--asphalt)}
-.route>li{position:relative;padding:0 0 40px 64px}
-.route>li:last-child{padding-bottom:0}
-.stop{position:absolute;left:0;top:2px;width:36px;height:36px;border-radius:50%;background:#fff;border:6px solid var(--asphalt);font-weight:700;font-size:14px;display:grid;place-items:center;line-height:1}
-.route h3{margin:2px 0 8px}
-
-table{border-collapse:collapse;width:100%;font-size:15px;margin:20px 0}
-th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-th{font-weight:700;background:var(--panel)}
-td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-.pos{color:var(--cut);font-weight:700} .neg{color:var(--add);font-weight:700}
-.grid td{text-align:center;font-variant-numeric:tabular-nums}
-.grid td.c-cut{background:#E3F3EC} .grid td.c-add{background:#FBE7E4}
-.tablewrap{overflow-x:auto}
-.note{font-size:14px;color:var(--muted)}
-
-.big{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:3px solid var(--asphalt);margin:28px 0}
-.big div{padding:16px 18px 6px 0}
-.big div+div{padding-left:18px;border-left:1px solid var(--line)}
-.big b{font-family:var(--display);font-weight:400;font-size:40px;line-height:1.1;display:block}
-.big span{font-size:15px;color:var(--muted)}
-
-ol.plain{padding-left:22px} ol.plain li{margin-bottom:10px}
-ul.plain{padding-left:20px} ul.plain li{margin-bottom:8px}
-
-footer{background:var(--asphalt);color:#d9e1e7;padding:48px 0 56px;font-size:15px}
-footer a{color:#fff}
-footer h2{color:#fff;font-size:24px}
-.links{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0 26px}
-.links a{display:inline-block;border:1.5px solid #fff;border-radius:999px;padding:8px 18px;text-decoration:none}
-.links a:hover{background:#fff;color:var(--asphalt)}
-
-@media (max-width:860px){
-  .hero .wrap{grid-template-columns:1fr;gap:32px;padding-top:40px;padding-bottom:40px}
-  .split{grid-template-columns:1fr;gap:8px}
-  .big{grid-template-columns:1fr}
-  .big div+div{padding-left:0;border-left:0;border-top:1px solid var(--line)}
-  section{padding:52px 0}
-  .controls label{grid-template-columns:1fr 3.6em}
-  .controls label span{grid-column:1/-1}
-}
-@media (max-width:480px){
-  body{font-size:16px}
-  .wrap{padding:0 16px}
-  .bus{padding:16px;border-radius:20px 36px 36px 20px}
-  .seats{gap:4px}
-  .sign nav{display:none}
-}
-</style>
+<link rel="stylesheet" href="css/site.css">
+<script>document.documentElement.classList.replace('no-js','js')</script>
 </head>
 <body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
 
-<div class="sign"><div class="wrap">
-  <b>버스타G</b>
-  <nav aria-label="페이지 안">
-    <a href="#why">왜 이 질문인가</a>
-    <a href="#pctr">PCTR</a>
-    <a href="#results">결과</a>
-    <a href="#proposal">제안</a>
-    <a href="#limits">한계</a>
-  </nav>
-</div></div>
-
-<header class="hero"><div class="wrap">
-  <div>
-    <h1>버스 한 번이 탄소를 줄이려면, 11자리는 승용차에서 와야 해요</h1>
-    <p class="lede">경기도 출퇴근 버스를 어느 길에 넣어야 승용차 통근이 실제로 줄어드는지, 국민연금 통근 데이터와 실제 통행시간으로 따져 봤어요.</p>
-    <p class="meta">숲과나눔 × 한겨레 「AI와 함께하는 교통문제 해결을 위한 데이터 분석 공모전」 출품작<br>
-      <a href="https://github.com/ehdtn0843ds-dss/trafficman/blob/main/report/%EB%B2%84%EC%8A%A4%ED%83%80G_%EB%B6%84%EC%84%9D%EB%B3%B4%EA%B3%A0%EC%84%9C.pdf">분석보고서 PDF</a>&nbsp;&nbsp;&nbsp;<a href="https://github.com/ehdtn0843ds-dss/trafficman">코드 저장소</a></p>
+<header class="sign">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="버스타G 맨 위로"><span class="brand-no" aria-hidden="true">G</span><b>버스타G</b></a>
+    <nav aria-label="페이지 안 이동">
+      <a href="#how">만든 과정</a>
+      <a href="#simulator">시뮬레이터</a>
+      <a href="#explorer">축 둘러보기</a>
+      <a href="#results">결과</a>
+      <a href="#hypothesis">가설 점검</a>
+      <a href="#proposal">제안</a>
+      <a href="#limits">한계</a>
+    </nav>
   </div>
+</header>
 
-  <div class="bus" aria-labelledby="bus-title">
-    <div class="bus-top"><span id="bus-title">유니버스 디젤 44석, 출근 1회</span><span>앞 ▸</span></div>
-    <div class="seats" id="seats" role="img" aria-label="44석 좌석 배치도"></div>
-    <div class="legend">
-      <span><i style="background:var(--car)"></i>원래 승용차로 출근하던 승객</span>
-      <span><i style="background:var(--transit)"></i>원래 대중교통 이용자</span>
-      <span><i style="border:1.5px solid var(--line)"></i>빈자리</span>
-    </div>
-    <div class="controls">
-      <label><span>회당 탑승</span><input type="range" id="n" min="0" max="44" step="1" value="20"><output id="nOut" for="n">20명</output></label>
-      <label><span>승용차 출신 비율 φ</span><input type="range" id="phi" min="0" max="1" step="0.05" value="0.25"><output id="phiOut" for="phi">0.25</output></label>
-      <div class="presets" role="group" aria-label="예시 값">
-        <button type="button" data-n="20" data-phi="0.25" aria-pressed="true">현행 편하G 수준 (20명, 0.25)</button>
-        <button type="button" data-n="44" data-phi="0.5" aria-pressed="false">산단 축 모형값 (44명, 0.5)</button>
+<main id="main">
+
+<!-- ================= 히어로: 좌석 배치도 ================= -->
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <div class="wrap">
+    <div>
+      <h1 id="hero-title">버스 한 번이 탄소를 줄이려면, <span class="seat-word">11자리는</span> 승용차에서 와야 해요</h1>
+      <p class="lede">경기도 출퇴근 버스를 어느 길에 넣어야 승용차 통근이 실제로 줄어드는지, 국민연금 통근 데이터와 직접 잰 통행시간 127쌍으로 따져 봤어요.</p>
+      <p class="hero-meta">숲과나눔 × 한겨레 「AI와 함께하는 교통문제 해결을 위한 데이터 분석 공모전」 출품작, 팀 버스타G</p>
+      <div class="hero-links">
+        <a class="ticket ticket--solid" href="#how">만든 과정 보기</a>
+        <a class="ticket" href="https://github.com/ehdtn0843ds-dss/trafficman/blob/main/report/%EB%B2%84%EC%8A%A4%ED%83%80G_%EB%B6%84%EC%84%9D%EB%B3%B4%EA%B3%A0%EC%84%9C.pdf">분석보고서 PDF</a>
       </div>
     </div>
-    <div class="verdict" id="verdict" aria-live="polite"></div>
-  </div>
-</div></header>
 
-<main>
-
-<section id="why"><div class="wrap"><div class="prose">
-  <h2>버스를 늘리면 승용차는 정말 줄어들까요?</h2>
-  <p>경기도 통근자의 상당수는 혼자 승용차를 몰고 시군 경계를 넘어요. 경기에서 서울로 가는 통근의 승용차 분담은 55%이고, 도내 시군 사이를 오갈 때는 대중교통이 승용차보다 평균 2.1배 오래 걸려요.</p>
-  <p>경기도는 좌석·예약형 출퇴근 버스인 편하G버스를 하루 84회(2026)에서 184회(2030)로 늘릴 계획이에요. 그런데 노선이 도민 제안과 시군 수요조사로 정해지다 보니, 현행 28개 노선 대부분이 서울행이에요.</p>
-  <p>서울행은 이미 전철이 빠른 길이에요. 이 버스 승객이 원래 전철을 타던 사람이라면 도로 위 승용차는 그대로이고, 버스 배출만 더해져요. 출근을 마친 버스가 빈 차로 돌아가는 회송까지 생각하면 더 그래요.</p>
-  <p>그래서 저희는 새 서비스를 만드는 대신, <b>이미 있는 버스를 어느 축에, 어떤 방식으로, 몇 회 넣어야 하는지</b> 정하는 기준을 데이터로 만들었어요.</p>
-</div></div></section>
-
-<section id="pctr"><div class="wrap">
-  <div class="split">
-    <div class="prose">
-      <h2>기준이 되는 숫자, PCTR</h2>
-      <div class="formula" aria-label="PCTR은 대중교통 시간을 승용차 시간으로 나눈 값">
-        <span>PCTR =</span>
-        <span class="frac"><span>대중교통 시간</span><span>승용차 시간</span></span>
+    <div class="bus" id="bus" aria-labelledby="bus-title">
+      <div class="bus-sign">
+        <span class="dest" id="bus-dest">현행 편하G 평균</span>
+        <span class="spec" id="bus-title">유니버스 디젤 44석, 출근 1회</span>
       </div>
-      <p>1보다 작으면 대중교통이 더 빠르고, 2라면 대중교통이 두 배 오래 걸린다는 뜻이에요. 대중교통이 느린 곳일수록 사람들이 차를 몰기 때문에, PCTR이 높은 축이 버스로 승용차를 끌어올 수 있는 후보가 돼요.</p>
-      <p>출발점을 구청이나 역 한 곳으로 잡으면 값이 크게 흔들려요. 그래서 시군마다 주민이 가장 많이 사는 행정동 5곳을 고르고, 그 안에서 아파트·주택이 가장 몰린 실제 건물을 출발점으로 삼았어요. 승용차는 평일 오전 8시 출발 예측 시간, 대중교통은 카카오맵 추천 1순위 경로로 재고, 5곳을 인구로 가중 평균했어요.</p>
+      <div class="bus-body">
+        <div class="bus-plan" id="seats" role="img" aria-label="44석 좌석 배치도">
+          <div class="aisle" aria-hidden="true"><span>통로</span></div>
+          <div class="driver" aria-hidden="true"></div>
+          <div class="door" aria-hidden="true">문</div>
+        </div>
+      </div>
+      <div class="bus-key" aria-hidden="true">
+        <span><i style="background:var(--car)"></i>원래 승용차로 출근하던 승객</span>
+        <span><i style="background:var(--transit)"></i>원래 대중교통 이용자</span>
+        <span><i class="k-need"></i>본전까지 더 필요한 승용차 출신 자리</span>
+      </div>
+      <div class="bus-controls">
+        <label class="ctl"><span class="ctl-label">회당 탑승</span><input class="range" type="range" id="n" min="0" max="44" step="1" value="20"><output class="ctl-out" id="nOut" for="n">20명</output></label>
+        <label class="ctl"><span class="ctl-label">승용차 출신 비율 φ</span><input class="range range--car" type="range" id="phi" min="0" max="1" step="0.05" value="0.25"><output class="ctl-out" id="phiOut" for="phi">0.25</output></label>
+        <div class="chips" role="group" aria-label="예시 값">
+          <button class="chip" type="button" data-n="20" data-phi="0.25" data-dest="현행 편하G 평균" aria-pressed="true">현행 편하G 수준 (20명, φ 0.25)</button>
+          <button class="chip" type="button" data-n="44" data-phi="0.25" data-dest="만석, 같은 φ" aria-pressed="false">만석이어도 φ 0.25</button>
+          <button class="chip" type="button" data-n="44" data-phi="0.5" data-dest="경기 내부 산단 축" aria-pressed="false">산단 축 모형값 (44명, φ 0.5)</button>
+        </div>
+      </div>
+      <div class="bus-verdict" id="verdict" aria-live="polite"></div>
     </div>
-    <figure class="figure">
-      <img src="assets/fig2_pctr_axes.png" alt="승용차 통근이 많은 상위 20개 축의 PCTR. 경기 내부 축은 대부분 1.5를 넘고 서울행 축은 1 안팎이다." loading="lazy">
-      <figcaption>승용차 통근 상위 20개 축의 PCTR. 막대는 출발점 5곳의 범위, 빈 원은 구청·역 한 곳에서 잰 값이에요.</figcaption>
-    </figure>
   </div>
-</div></section>
+</section>
 
-<section id="results"><div class="wrap">
-  <h2>데이터를 따라가 보면</h2>
-  <ol class="route">
-    <li><span class="stop" aria-hidden="true">1</span>
-      <div class="split">
-        <div class="prose">
-          <h3>승용차 통근이 가장 많은 곳은 경기도 안쪽이에요</h3>
-          <p>국민연금 직장·거주지 이동 데이터에서 시군 경계를 넘는 통근 축 532개(211만 명)를 뽑았어요. 승용차 통근 상위 20개 축 중 10개가 경기 내부 축이고, 1위는 화성→수원 영통(약 3.3만 명)이에요.</p>
-          <p>이 20개 축 중 편하G가 다니는 곳은 용인→서울 강남 하나뿐이에요.</p>
+<!-- ================= 한 줄 핵심 ================= -->
+<section class="sec" id="gist" aria-labelledby="gist-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="gist-title">같은 100회라도, 어디에 넣느냐에 따라 탄소가 늘기도 줄기도 해요</h2>
+      <p class="sec-lede">경기도는 좌석·예약형 출퇴근 버스인 편하G버스를 하루 84회(2026)에서 184회(2030)로 늘려요. 늘어나는 100회를 지금처럼 나누면 탄소가 늘 가능성이 크고, <b>대중교통이 느린 경기 내부 산단 축</b>에 넣으면 줄 가능성이 더 커요.</p>
+    </div>
+    <ul class="versus">
+      <li class="vs-row vs-row--seoul">
+        <div class="vs-name"><span class="vs-line" aria-hidden="true"></span>현행 방식</div>
+        <p class="vs-where"><b>현 28개 노선에 비례해 배분</b>노선 대부분이 서울행이고 PCTR 평균 1.06이에요. 전철이 이미 빠른 길이라 승객 다수가 원래 대중교통 이용자예요.</p>
+        <div class="readout is-add vs-prob">
+          <span class="readout-label">순증가 확률</span>
+          <span class="readout-value">86%</span>
+          <div class="prob" style="--v:86%;--pc:var(--add)" aria-hidden="true"><i></i></div>
         </div>
-        <figure class="figure"><img src="assets/fig1_axes_map.png" alt="경기 통근 축 지도. 주황색 경기 내부 축이 굵고, 증편을 배분한 4개 축은 검은 테두리로 표시돼 있다." loading="lazy" style="max-width:420px;margin:0 auto"><figcaption>주황은 경기 내부, 파랑은 서울행, 검은 테두리는 증편을 배분한 4개 축이에요.</figcaption></figure>
-      </div>
-    </li>
-    <li><span class="stop" aria-hidden="true">2</span>
-      <div class="prose">
-        <h3>서울행은 전철이 빠르고, 경기 내부는 차가 두 배 가까이 빨라요</h3>
-        <p>축별 PCTR 평균은 경기 내부 1.82, 서울행 0.82예요. 출발점 하나하나로 봐도 PCTR 1.5 이상은 경기 내부 50곳 중 41곳, 서울행 50곳 중 0곳이었어요. 현행 편하G 28개 노선은 평균 1.06이고, 1.5를 넘는 노선은 1개뿐이에요.</p>
-      </div>
-    </li>
-    <li><span class="stop" aria-hidden="true">3</span>
-      <div class="split">
-        <div class="prose">
-          <h3>버스를 새로 넣을 만한 축은 9개예요</h3>
-          <p>축마다 대중교통이 왜 느린지 진단했더니 수요관리 11개, DRT 연계 7개, 출퇴근 직행 2개가 나왔어요. 서울행 10개 축은 모두 수요관리예요.</p>
-          <p>DRT 연계로 진단된 축에서도 역까지 데려다주는 똑버스는 승용차를 끌어오지 못했어요. 평균 대기 14분이 걷는 시간을 줄여 얻는 이득보다 길었거든요. 그래서 이런 축에도 아파트 단지 안에 서는 직행버스를 권해요.</p>
+        <div class="readout readout--sm is-add vs-t">
+          <span class="readout-label">모형 기준값</span>
+          <span class="readout-value">−793<span class="readout-unit">tCO₂/년</span></span>
         </div>
-        <figure class="figure"><img src="assets/fig3_matrix.png" alt="PCTR과 승용차 통근자 수로 20개 축을 분류한 산점도" loading="lazy"><figcaption>PCTR × 승용차 통근자로 본 분류. 테두리 원이 증편을 배분한 축이에요.</figcaption></figure>
-      </div>
-    </li>
-    <li><span class="stop" aria-hidden="true">4</span>
-      <div class="split">
-        <div class="prose">
-          <h3>기준은 회당 승용차 출신 승객 약 11명이에요</h3>
-          <p>현대자동차 공식 제원으로 유니버스 디젤 44석과 쏘나타의 주행 연료를 차량 동역학 모델로 계산했어요. 승객 중 원래 승용차 이용자 비율 φ가 1.0이면 10.7명, 0.5면 21.9명, 0.25면 45.3명이 타야 본전이에요.</p>
-          <p>두 값을 곱한 회당 승용차 출신 승객으로 보면, 탑승 인원이나 노선 길이와 거의 상관없이 약 11명(20명 탑승 10.9명, 44명 탑승 11.3명)이에요. 위의 좌석 배치도가 바로 이 계산이에요.</p>
+      </li>
+      <li class="vs-row vs-row--pctr">
+        <div class="vs-name"><span class="vs-line" aria-hidden="true"></span>PCTR 기준</div>
+        <p class="vs-where"><b>경기 내부 산단 4개 축에 배분</b>평택→화성, 고양→파주, 안산→화성, 화성→수원 영통. PCTR 1.75~2.57로 대중교통이 승용차보다 두 배 가까이 느린 길이에요.</p>
+        <div class="readout is-cut vs-prob">
+          <span class="readout-label">순감축 확률</span>
+          <span class="readout-value">61%</span>
+          <div class="prob" style="--v:61%;--pc:var(--cut)" aria-hidden="true"><i></i></div>
         </div>
-        <figure class="figure"><img src="assets/fig4_breakeven.png" alt="탑승 인원에 따른 버스 1회의 순감축 그래프. φ가 낮을수록 손익분기 탑승 인원이 커진다." loading="lazy"><figcaption>유니버스 디젤 44석 1회의 탄소 손익분기. 수소버스는 φ 0.25에서 23.3명이면 넘어요.</figcaption></figure>
+        <div class="readout readout--sm is-cut vs-t">
+          <span class="readout-label">모형 기준값</span>
+          <span class="readout-value">+1,020<span class="readout-unit">tCO₂/년</span></span>
+        </div>
+      </li>
+    </ul>
+    <div class="caveat">
+      <p>확률은 탑승·φ·연비·회송·재차인원을 동시에 2만 번 뽑아 계산한 값이에요. 이 차이는 <b>“대중교통이 느린 축일수록 승용차 출신 승객이 많고 더 많이 탄다”</b>는 가설에서 나와요. 두 방식에 같은 탑승과 φ를 주면 우위는 사라지기 때문에, 이 가설을 따로 <a href="#hypothesis">점검했어요</a>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 만든 과정: 노선도 스테퍼 ================= -->
+<section class="sec sec--panel" id="how" aria-labelledby="how-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="how-title">어떻게 만들었나: 통근 데이터에서 증편 배분까지</h2>
+      <p class="sec-lede">정류장을 하나씩 누르면 단계마다 무엇을 했고 어떤 결과가 나왔는지 볼 수 있어요. 문제의식과 아이디어, 분석 방향과 검토는 팀이, 조사·전처리·측정 자동화·코드·시각화는 Claude 에이전트가 맡았어요.</p>
+    </div>
+
+    <div class="route-nav" id="route-nav">
+      <div class="route-track" aria-hidden="true"><div class="route-done" id="route-done"></div>
+        <div class="route-bus" id="route-bus"><svg viewBox="0 0 36 26" aria-hidden="true"><rect x="1" y="2" width="33" height="17" rx="4" fill="#1E2830"/><rect x="5" y="6" width="5" height="5" rx="1" fill="#EDF1F4"/><rect x="12" y="6" width="5" height="5" rx="1" fill="#EDF1F4"/><rect x="19" y="6" width="5" height="5" rx="1" fill="#EDF1F4"/><rect x="27" y="5" width="5" height="9" rx="1.5" fill="#EB6834"/><circle cx="9" cy="20" r="3.4" fill="#1E2830" stroke="#EDF1F4" stroke-width="1.6"/><circle cx="26" cy="20" r="3.4" fill="#1E2830" stroke="#EDF1F4" stroke-width="1.6"/></svg></div>
       </div>
-    </li>
-    <li><span class="stop" aria-hidden="true">5</span>
-      <div class="prose">
-        <h3>같은 100회도 어디에 넣느냐에 따라 결과가 갈려요</h3>
-        <p>2030년 증편분 100회(출근 50 + 퇴근 50)를 탄소를 가장 많이 줄이는 축부터 배분했어요. 평택→화성(기아 화성공장), 고양→파주(LG디스플레이), 안산→화성(현대차 남양연구소), 화성→수원 영통(삼성 디지털시티) 4개 축이 뽑혔어요.</p>
+      <ol class="route-stops" role="tablist" aria-label="분석 단계">
+        <li><button class="stop-btn" role="tab" id="tab-1" aria-controls="step-1" aria-selected="true"><span class="stop-dot">1</span><span class="stop-name">통근 축</span></button></li>
+        <li><button class="stop-btn" role="tab" id="tab-2" aria-controls="step-2" aria-selected="false" tabindex="-1"><span class="stop-dot">2</span><span class="stop-name">출발점</span></button></li>
+        <li><button class="stop-btn" role="tab" id="tab-3" aria-controls="step-3" aria-selected="false" tabindex="-1"><span class="stop-dot">3</span><span class="stop-name">통행시간</span></button></li>
+        <li><button class="stop-btn" role="tab" id="tab-4" aria-controls="step-4" aria-selected="false" tabindex="-1"><span class="stop-dot">4</span><span class="stop-name">PCTR</span></button></li>
+        <li><button class="stop-btn" role="tab" id="tab-5" aria-controls="step-5" aria-selected="false" tabindex="-1"><span class="stop-dot">5</span><span class="stop-name">수단 모형</span></button></li>
+        <li><button class="stop-btn" role="tab" id="tab-6" aria-controls="step-6" aria-selected="false" tabindex="-1"><span class="stop-dot">6</span><span class="stop-name">원인 진단</span></button></li>
+        <li><button class="stop-btn" role="tab" id="tab-7" aria-controls="step-7" aria-selected="false" tabindex="-1"><span class="stop-dot">7</span><span class="stop-name">탄소 손익분기</span></button></li>
+        <li><button class="stop-btn" role="tab" id="tab-8" aria-controls="step-8" aria-selected="false" tabindex="-1"><span class="stop-dot">8</span><span class="stop-name">증편 배분</span></button></li>
+        <li><button class="stop-btn" role="tab" id="tab-9" aria-controls="step-9" aria-selected="false" tabindex="-1"><span class="stop-dot">9</span><span class="stop-name">검증</span></button></li>
+      </ol>
+    </div>
+
+    <div class="stage" id="stage">
+
+      <!-- 1 -->
+      <article class="stage-panel" id="step-1" role="tabpanel" aria-labelledby="tab-1" tabindex="0">
+        <div class="stage-text">
+          <p class="stage-count">1 / 9 통근 축</p>
+          <h3>시군 경계를 넘는 통근 축 532개에서 20개로</h3>
+          <p>국민연금 직장·거주지 이동 데이터(2025-12)에서 경기도에서 출발해 시군 경계를 넘는 1,000명 이상 축을 모두 뽑았어요. 출발 시군의 30분 이상 통근자 승용차 비율로 축별 승용차 통근자를 1차 추정하고, 상위 20개 축을 분석 대상으로 골랐어요.</p>
+          <dl class="facts">
+            <div><dt>통근 축</dt><dd>532<small>개</small></dd></div>
+            <div><dt>그 축의 통근자</dt><dd>211<small>만 명</small></dd></div>
+            <div><dt>분석한 축 (경기 내부 10, 서울행 10)</dt><dd>20<small>개</small></dd></div>
+            <div><dt>20개 중 편하G가 다니는 축</dt><dd>1<small>개</small></dd></div>
+          </dl>
+          <dl class="roles">
+            <div><dt>팀의 방향</dt><dd><q>승용차 절대 통행량을 줄이는 게 우선이다.</q></dd></div>
+            <div><dt>에이전트</dt><dd>국민연금 OD 전처리, 축별 승용차 통근자 1차 추정</dd></div>
+          </dl>
+          <p class="code-path">코드 <code>pctr_commute/build_commute_axes.py</code></p>
+        </div>
+        <div class="stage-viz">
+          <figure class="chart">
+            <ul class="key"><li><span class="sw sw--car"></span>경기 내부 축</li><li><span class="sw sw--seoul"></span>서울행 축</li><li><span class="sw sw--muted"></span>그 밖의 축</li></ul>
+            <div class="axgrid" id="viz-axes" role="img" aria-label="통근 축 532개 격자. 승용차 통근자 1차 추정 상위 20개 축만 진하게 표시"></div>
+            <figcaption class="chart-cap">칸 하나가 통근 축 하나예요. 승용차 통근자 1차 추정이 많은 순서로 놓았고, 진한 칸이 분석한 상위 20개 축이에요. 1위는 화성→수원 영통(약 3.3만 명)이에요. <button class="chip" type="button" id="axes-toggle">532개 모두 보기</button></figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 2 -->
+      <article class="stage-panel" id="step-2" role="tabpanel" aria-labelledby="tab-2" tabindex="0" hidden>
+        <div class="stage-text">
+          <p class="stage-count">2 / 9 출발점</p>
+          <h3>출발점은 구청이 아니라 사람들이 사는 건물</h3>
+          <p>출발점을 구청이나 역 한 곳으로 잡으면 값이 크게 흔들려요. 그래서 시군마다 주민등록 인구 상위 5개 행정동을 고르고, 동 안의 OSM 주거 건물을 바닥면적×층수로 가중해 가중 거리 합이 가장 작은 실제 건물(메도이드)을 출발점으로 잡았어요.</p>
+          <dl class="facts">
+            <div><dt>출발점 (11개 시 × 5곳)</dt><dd>55<small>곳</small></dd></div>
+            <div><dt>5곳이 대표하는 시 인구</dt><dd>17~69<small>%</small></dd></div>
+          </dl>
+          <dl class="roles">
+            <div><dt>팀의 방향</dt><dd><q>출발점을 구청이 아니라 주거 밀집 지역 4~5곳으로 잡고, 목적지까지 시간 평균을 쓰자.</q></dd></div>
+            <div><dt>에이전트</dt><dd>행정동 인구 정리, OSM 주거 건물 조회와 대표점 계산</dd></div>
+          </dl>
+          <p class="code-path">코드 <code>resid/aggregate.py</code></p>
+        </div>
+        <div class="stage-viz">
+          <figure class="chart">
+            <div id="viz-origin"></div>
+            <figcaption class="chart-cap">평택→화성(기아 화성공장) 축의 출발점 5곳. 원 넓이는 행정동 인구예요. 구청·역 한 곳에서 재면 PCTR 2.88, 5곳을 인구로 가중하면 2.57이에요.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 3 -->
+      <article class="stage-panel" id="step-3" role="tabpanel" aria-labelledby="tab-3" tabindex="0" hidden>
+        <div class="stage-text">
+          <p class="stage-count">3 / 9 통행시간</p>
+          <h3>같은 출발점에서 승용차와 대중교통을 따로 쟀어요</h3>
+          <p>승용차는 카카오모빌리티 미래 운행 정보 API로 평일 오전 8시 출발 예측 시간을, 대중교통은 카카오맵 길찾기의 추천 1순위 경로를 기록했어요. 현행 편하G 28개 노선도 같은 방식으로 쟀고, 대중교통 값은 ODsay API와 비교해 검증했어요.</p>
+          <dl class="facts">
+            <div><dt>측정한 출발·도착 쌍</dt><dd>127<small>쌍</small></dd></div>
+            <div><dt>ODsay 29쌍과 상관계수</dt><dd>0.78</dd></div>
+            <div><dt>두 값의 시간 비 중앙값</dt><dd>1.02</dd></div>
+          </dl>
+          <dl class="roles">
+            <div><dt>에이전트</dt><dd>카카오 API·카카오맵 웹 조회 자동화, ODsay 교차검증</dd></div>
+          </dl>
+          <p class="code-path">코드 <code>apimeasure/measure_car_kakao.py</code> <code>apimeasure/build_inputs.py</code></p>
+        </div>
+        <div class="stage-viz">
+          <figure class="chart">
+            <ul class="key"><li><span class="sw sw--car"></span>승용차 (평일 08:00 출발 예측)</li><li><span class="sw sw--transit"></span>대중교통 (추천 1순위)</li></ul>
+            <div id="viz-times"></div>
+            <figcaption class="chart-cap">평택→화성 출발점 5곳의 통행시간이에요. 대중교통이 2.2~2.8배 오래 걸려요. 카카오맵 PC웹은 출발시각을 정할 수 없어 출근 시간대 혼잡은 반영되지 않았어요.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 4 -->
+      <article class="stage-panel" id="step-4" role="tabpanel" aria-labelledby="tab-4" tabindex="0" hidden>
+        <div class="stage-text">
+          <p class="stage-count">4 / 9 PCTR</p>
+          <h3>PCTR = 대중교통 시간 ÷ 승용차 시간</h3>
+          <p>출발점 5곳의 시간을 행정동 인구로 가중 평균해 축의 PCTR을 냈어요. 1보다 작으면 대중교통이 더 빠르고, 2면 두 배 오래 걸린다는 뜻이에요. 대중교통이 느린 곳일수록 차를 몰기 때문에, PCTR이 높은 축이 버스로 승용차를 끌어올 후보예요.</p>
+          <dl class="facts">
+            <div><dt>경기 내부 축 평균</dt><dd>1.82</dd></div>
+            <div><dt>서울행 축 평균</dt><dd>0.82</dd></div>
+            <div><dt>PCTR 1.5 이상 출발점 (경기 내부 / 서울행)</dt><dd>41<small>/50</small> · 0<small>/50</small></dd></div>
+            <div><dt>현행 편하G 28개 노선 평균</dt><dd>1.06</dd></div>
+          </dl>
+          <p class="code-path">코드 <code>resid/aggregate.py</code></p>
+        </div>
+        <div class="stage-viz">
+          <figure class="chart">
+            <ul class="key"><li><span class="sw sw--car"></span>경기 내부</li><li><span class="sw sw--seoul"></span>서울행</li><li><span class="sw sw--ring"></span>구청·역 한 곳에서 잰 값</li></ul>
+            <div id="viz-pctr"></div>
+            <figcaption class="chart-cap">승용차 통근 상위 20개 축의 PCTR. 점은 5곳 인구가중 값, 가로선은 5곳의 범위예요.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 5 -->
+      <article class="stage-panel" id="step-5" role="tabpanel" aria-labelledby="tab-5" tabindex="0" hidden>
+        <div class="stage-text">
+          <p class="stage-count">5 / 9 수단 모형</p>
+          <h3>PCTR이 오르면 승용차 비율은 얼마나 오를까</h3>
+          <p>국민연금 자료에는 이용 수단이 없어요. 그래서 경기 31개 시군의 관측 PCTR과 인구총조사(2020) 승용차 통근 분담률로 통근자 가중 로짓 회귀를 적합했어요. 이 β로 축마다 승용차 통근자와, 버스가 생기면 옮겨 올 수요를 계산해요.</p>
+          <dl class="facts">
+            <div><dt>경기 시군</dt><dd>31<small>개</small></dd></div>
+            <div><dt>로짓 계수 β</dt><dd>3.20</dd></div>
+            <div><dt>PCTR과 승용차 분담률 상관계수</dt><dd>0.76</dd></div>
+          </dl>
+          <dl class="roles">
+            <div><dt>팀의 방향</dt><dd><q>국민연금 자료에는 차량·대중교통 비율이 없으니 이 공백을 채우자.</q></dd></div>
+            <div><dt>에이전트</dt><dd>KOSIS 통근 자료 전처리, 회귀·축 모형 코드</dd></div>
+          </dl>
+          <p class="code-path">코드 <code>pctr_commute/fit_beta.py</code> <code>pctr_commute/axis_model.py</code></p>
+        </div>
+        <div class="stage-viz">
+          <figure class="chart">
+            <div id="viz-logit"></div>
+            <figcaption class="chart-cap">경기 31개 시군. 원 넓이는 통근자 수, 선은 logit(승용차 분담률) = −1.05 + 3.20·ln PCTR이에요. 시군 관측 범위(1.19~1.91) 밖의 축은 외삽이에요.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 6 -->
+      <article class="stage-panel" id="step-6" role="tabpanel" aria-labelledby="tab-6" tabindex="0" hidden>
+        <div class="stage-text">
+          <p class="stage-count">6 / 9 원인 진단</p>
+          <h3>왜 느린지에 따라 처방이 달라요</h3>
+          <p>위 조건부터 차례로 판정했어요. 승용차 통근자 3,000명 미만은 보류, PCTR 1.5 미만은 수요관리, 평균 도보 20분 이상 또는 30% 이상은 DRT 연계, 나머지는 출퇴근 직행이에요.</p>
+          <p>DRT 연계 축에서도 똑버스 평균 대기 14분이 도보를 줄여 얻는 이득보다 길었어요(대기 임계 7.4~11.3분). 그래서 이 축들에도 아파트 단지 안에 서는 직행버스를 권해요.</p>
+          <dl class="facts">
+            <div><dt>수요관리 (서울행 10개 모두)</dt><dd>11<small>개</small></dd></div>
+            <div><dt>DRT 연계</dt><dd>7<small>개</small></dd></div>
+            <div><dt>출퇴근 직행</dt><dd>2<small>개</small></dd></div>
+            <div><dt>버스를 새로 넣을 후보</dt><dd>9<small>개</small></dd></div>
+          </dl>
+          <p class="code-path">코드 <code>pctr_commute/axis_model.py</code></p>
+        </div>
+        <div class="stage-viz">
+          <figure class="chart">
+            <div class="bins" id="viz-diag"></div>
+            <figcaption class="chart-cap">주황 칸은 8단계에서 증편이 배분된 4개 축, 파란 테두리는 현재 편하G가 다니는 축이에요.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 7 -->
+      <article class="stage-panel" id="step-7" role="tabpanel" aria-labelledby="tab-7" tabindex="0" hidden>
+        <div class="stage-text">
+          <p class="stage-count">7 / 9 탄소 손익분기</p>
+          <h3>버스 1회가 본전을 넘는 탑승 인원</h3>
+          <p>현대자동차 2026 공식 제원(유니버스 디젤 44석, 유니버스 수소전기버스, 쏠라티, 쏘나타)으로 도로 부하식과 윌런스 선 연료 모델을 세워, 버스 1회와 승용차 통근 1인의 CO₂를 계산했어요. 출근을 마치고 빈 차로 돌아가는 회송 1회도 넣었어요.</p>
+          <p>φ가 낮을수록 더 많이 타야 하는데, 탑승과 φ를 곱한 <b>회당 승용차 출신 승객</b>으로 보면 기준은 탑승·축 길이와 거의 상관없이 약 11명이에요.</p>
+          <dl class="facts">
+            <div><dt>φ 1.0일 때 필요한 탑승</dt><dd>10.7<small>명</small></dd></div>
+            <div><dt>φ 0.5</dt><dd>21.9<small>명</small></dd></div>
+            <div><dt>φ 0.25 (정원 44석 초과)</dt><dd>45.3<small>명</small></dd></div>
+            <div><dt>수소버스, φ 0.25</dt><dd>23.3<small>명</small></dd></div>
+          </dl>
+          <dl class="roles">
+            <div><dt>팀의 방향</dt><dd><q>엔진맵 없이 탄소 손익분기 모델을 만들자.</q></dd></div>
+            <div><dt>에이전트</dt><dd>차량 제원·연비 근거 조사, 손익분기 코드</dd></div>
+          </dl>
+          <p class="code-path">코드 <code>pctr_commute/breakeven.py</code></p>
+        </div>
+        <div class="stage-viz">
+          <figure class="chart">
+            <div id="viz-breakeven"></div>
+            <figcaption class="chart-cap">유니버스 디젤 44석, 연비 3.49 km/L, 회송 1회, 승용차 재차 1.1명 기준. 곡선 위쪽에서 버스가 탄소를 줄여요.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 8 -->
+      <article class="stage-panel" id="step-8" role="tabpanel" aria-labelledby="tab-8" tabindex="0" hidden>
+        <div class="stage-text">
+          <p class="stage-count">8 / 9 증편 배분</p>
+          <h3>2030 증편 100회를 탄소를 가장 많이 줄이는 축부터</h3>
+          <p>도 계획의 100회는 출근 50회와 퇴근 50회예요. 출근 50회를 한 회씩, 탄소를 가장 많이 줄이는 축에 넣었고(축당 최대 15회) 퇴근은 대칭 운행으로 계산했어요. 현행 방식은 현 28개 노선에 지금 운행 비율대로 나눈 경우예요.</p>
+          <p>수요는 현행 편하G 실적(2022년 연 32만 건, 회당 약 19.5명)과 φ 0.25에 맞춰 보정했어요.</p>
+          <dl class="facts">
+            <div><dt>증편이 배분된 축</dt><dd>4<small>개</small></dd></div>
+            <div><dt>PCTR 기준, 모형 기준값</dt><dd class="pos">+1,020<small>t/년</small></dd></div>
+            <div><dt>현행 방식, 모형 기준값</dt><dd class="neg">−793<small>t/년</small></dd></div>
+          </dl>
+          <p class="code-path">코드 <code>pctr_commute/axis_model.py</code></p>
+        </div>
+        <div class="stage-viz">
+          <figure class="chart">
+            <div class="trips" id="viz-alloc"></div>
+            <figcaption class="chart-cap">칸 하나가 출근 1회예요. 같은 50회가 PCTR 기준에서는 4개 축에 몰리고, 현행 방식에서는 28개 노선에 1~2회씩 흩어져요.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 9 -->
+      <article class="stage-panel" id="step-9" role="tabpanel" aria-labelledby="tab-9" tabindex="0" hidden>
+        <div class="stage-text">
+          <p class="stage-count">9 / 9 검증</p>
+          <h3>가정을 흔들어도 결론이 버티는지</h3>
+          <p>입력 15개(β 2.37~3.31 포함)를 하나씩 범위 끝으로 바꾸며 다시 보정했고, 탑승·φ·연비·회송·재차인원은 근거 범위 안에서 동시에 뽑아 2만 번 계산했어요.</p>
+          <dl class="facts">
+            <div><dt>민감도 입력</dt><dd>15<small>개</small></dd></div>
+            <div><dt>몬테카를로</dt><dd>2<small>만 회</small></dd></div>
+            <div><dt>PCTR 기준이 순감축일 확률</dt><dd class="pos">61<small>%</small></dd></div>
+            <div><dt>현행 방식이 순증가일 확률</dt><dd class="neg">86<small>%</small></dd></div>
+          </dl>
+          <dl class="roles">
+            <div><dt>팀의 방향</dt><dd><q>추정값으로 되어 있는 것은 모두 확실한 근거를 찾아서 바꾸자.</q></dd></div>
+            <div><dt>에이전트</dt><dd>입력값 근거 문헌 조사, 민감도·몬테카를로 코드</dd></div>
+          </dl>
+          <p class="code-path">코드 <code>pctr_commute/sensitivity.py</code> <code>pctr_commute/montecarlo.py</code></p>
+        </div>
+        <div class="stage-viz">
+          <figure class="chart">
+            <ul class="key"><li><span class="sw sw--car"></span>PCTR 기준</li><li><span class="sw sw--seoul"></span>현행 방식</li></ul>
+            <div id="viz-mc"></div>
+            <figcaption class="chart-cap">2만 회 계산의 연간 순감축 분포(100 t 간격). 0보다 오른쪽이 감축이에요. 중앙값은 PCTR 기준 +124 t, 현행 방식 −388 t예요.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <div class="stage-foot">
+        <button class="ticket" type="button" id="step-prev">이전 단계</button>
+        <span class="hint">정류장을 누르거나 ← → 키로 넘길 수 있어요</span>
+        <button class="ticket ticket--solid" type="button" id="step-next">다음 단계</button>
       </div>
-      <div class="tablewrap"><table>
-        <thead><tr><th>구분</th><th>배분 대상</th><th>회당 탑승 × φ</th><th class="num">하루 이용</th><th class="num">연간 순감축</th></tr></thead>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 시뮬레이터 마운트 지점 ================= -->
+<section class="sec" id="simulator" aria-labelledby="simulator-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="simulator-title">직접 계산해 보기</h2>
+      <p class="sec-lede">회당 탑승, 승용차 출신 비율 φ, 연비, 회송을 바꾸면서 증편 100회의 연간 순감축이 어떻게 달라지는지 확인해 보세요.</p>
+    </div>
+    <div class="mount" id="simulator-root" data-state="empty">
+      <p class="mount-empty">시뮬레이터가 이 자리에 들어와요.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 축 지도 탐색기 마운트 지점 ================= -->
+<section class="sec sec--panel" id="explorer" aria-labelledby="explorer-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="explorer-title">20개 축 둘러보기</h2>
+      <p class="sec-lede">지도에서 축을 고르면 출발점 5곳의 통행시간과 PCTR, 진단 결과와 배분된 증편 횟수를 볼 수 있어요.</p>
+    </div>
+    <div class="mount" id="explorer-root" data-state="empty">
+      <p class="mount-empty">축 지도 탐색기가 이 자리에 들어와요.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 결과 요약 ================= -->
+<section class="sec" id="results" aria-labelledby="results-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="results-title">결과 한눈에 보기</h2>
+      <p class="sec-lede">모형 기준값(회당 44명, φ 0.5)에서는 PCTR 기준이 연 1,020 t를 줄이고 현행 방식은 793 t를 늘려요. 이 기준값은 모형이 내놓은 값이라, 탑승과 φ를 직접 바꿔 다시 계산했어요.</p>
+    </div>
+
+    <h3>모형 기준값으로 본 2030 증편 100회 (보고서 표3)</h3>
+    <div class="tablewrap">
+      <table class="data">
+        <thead><tr><th scope="col">구분</th><th scope="col">배분 대상</th><th scope="col">회당 탑승 × φ</th><th scope="col" class="num">하루 이용</th><th scope="col" class="num">승용차 출신</th><th scope="col" class="num">대중교통 출신</th><th scope="col" class="num">연간 순감축</th></tr></thead>
         <tbody>
-          <tr><td>PCTR 기준</td><td>경기 내부 4개 축</td><td>44명 × 0.5 = 22명</td><td class="num">2,200명</td><td class="num pos">+1,020 tCO₂</td></tr>
-          <tr><td>현행 방식</td><td>현 28개 노선에 비례</td><td>19.5명 × 0.25 ≈ 5명</td><td class="num">1,032명</td><td class="num neg">−793 tCO₂ (증가)</td></tr>
+          <tr><th scope="row" class="row-name" style="--c:var(--car)"><i aria-hidden="true"></i>PCTR 기준</th><td>경기 내부 4개 축</td><td>44명 × 0.5 = 22명</td><td class="num">2,200명</td><td class="num">1,100명</td><td class="num">1,100명</td><td class="num pos">+1,020 tCO₂</td></tr>
+          <tr><th scope="row" class="row-name" style="--c:var(--seoul)"><i aria-hidden="true"></i>현행 방식</th><td>현 28개 노선에 비례</td><td>19.5명 × 0.25 ≈ 5명</td><td class="num">1,032명</td><td class="num">256명</td><td class="num">777명</td><td class="num neg">−793 tCO₂</td></tr>
         </tbody>
-      </table></div>
-      <div class="prose">
-        <p>"회당 44명, φ 0.5"는 모형이 내놓은 값이라 그대로 믿기 어려워요. 그래서 탑승과 φ를 직접 바꿔 가며 다시 계산했어요. 칸의 값은 PCTR 기준 / 같은 조건의 현행 방식이에요.</p>
-      </div>
-      <div class="tablewrap"><table class="grid">
-        <thead><tr><th>회당 탑승</th><th>φ = 0.25</th><th>φ = 0.35</th><th>φ = 0.5</th></tr></thead>
-        <tbody>
-          <tr><th>20명</th><td class="c-add">−563 / −754</td><td class="c-add">−372 / −498</td><td class="c-add">−86 / −115</td></tr>
-          <tr><th>30명</th><td class="c-add">−340 / −455</td><td class="c-add">−54 / −72</td><td class="c-cut">+375 / +502</td></tr>
-          <tr><th>44명</th><td class="c-add">−28 / −38</td><td class="c-cut">+391 / +524</td><td class="c-cut">+1,020 / +1,367</td></tr>
-        </tbody>
-      </table></div>
-      <p class="note">단위 tCO₂/년. 초록은 순감축, 빨강은 순증가예요.</p>
-      <div class="prose">
-        <p>솔직하게 말하면, 탑승과 φ가 같을 때는 노선이 더 긴 현행 방식의 절댓값이 오히려 커요. PCTR 기준이 유리한 이유는 "대중교통이 느린 축일수록 승용차 출신 승객이 많고 더 많이 탄다"는 가설 하나예요. 그래서 이 가설을 직접 흔들어 봤어요.</p>
-      </div>
-      <div class="big">
-        <div><b>0.69 : 0.33</b><span>지금의 통근 수단 구성대로 승객이 온다고 본 φ 참고값, 배분 축 대 현행 노선</span></div>
-        <div><b>61%</b><span>탑승·φ·연비·회송·재차인원을 동시에 2만 번 뽑았을 때 PCTR 기준이 순감축일 확률</span></div>
-        <div><b>86%</b><span>같은 계산에서 현행 방식이 순증가일 확률</span></div>
-      </div>
-      <figure class="figure"><img src="assets/fig7_hypothesis.png" alt="(a) 노선별 φ 참고값 비교, (b) 2만 회 몬테카를로 연간 순감축 분포" loading="lazy"><figcaption>(a) 현행 노선과 버스 후보 축의 φ 참고값. (b) 2만 회 계산의 연간 순감축 분포, 점선은 중앙값이에요.</figcaption></figure>
-      <div class="prose">
-        <p>버스 승객 중 원래 대중교통 이용자(1−φ)에게도 편익이 있어요. 서울행 노선은 광역버스·전철 출근 혼잡을 덜어 주고, 산단 축은 통근시간이 확 줄어요. 평택→화성은 151분에서 69분, 안산→화성은 96분에서 60분이 돼요.</p>
-      </div>
-    </li>
-  </ol>
-</div></section>
+        <caption>출근 50회 + 퇴근 50회, 연 245일, 하루 이용은 실인원이에요. −는 순증가예요.</caption>
+      </table>
+    </div>
 
-<section id="proposal"><div class="wrap"><div class="prose">
-  <h2>그래서 이렇게 제안해요</h2>
-  <ol class="plain">
-    <li><b>노선을 고를 때 PCTR과 11명 기준을 확인해요.</b> 주거지 5곳 PCTR이 1.5 이상인지, 개통 전 주민 설문으로 본 회당 승용차 출신 승객이 11명 이상인지 봐요.</li>
-    <li><b>2030 증편분은 경기 내부 산단 축부터 시범 배치해요.</b> 1년 운행 실적으로 11명 기준을 확인한 뒤 넓혀요.</li>
-    <li><b>증편 목적을 먼저 정해요.</b> 탄소 감축이 목적이면 산단 축, 서울행은 출근 혼잡 완화 수단으로 봐요.</li>
-    <li><b>걷는 게 문제인 축은 단지 안에 서는 직행으로 운영해요.</b> 역 연계 DRT는 대기를 7~11분 이하로 줄일 수 있을 때만 써요.</li>
-    <li><b>대기업 사업장 축은 기업 통근버스와 함께 짜요.</b> 기업 버스가 닿지 않는 주거지·협력사 직원을 도가 맡아요.</li>
-    <li><b>노선별 탑승 실적과 이전 이용 수단 설문을 공개해 주세요.</b> 그러면 이 기준을 노선마다 바로 검증할 수 있어요.</li>
-  </ol>
-</div></div></section>
+    <div class="split" style="margin-top:var(--s7)">
+      <div>
+        <h3>회당 탑승 × φ를 바꿔 다시 계산하면 (보고서 표4)</h3>
+        <p class="note" style="margin-bottom:var(--s3)">칸마다 위는 PCTR 기준, 아래는 같은 조건의 현행 방식이에요. 단위 tCO₂/년, 굵은 테두리가 모형 기준값이에요.</p>
+        <div class="tablewrap">
+          <table class="heat">
+            <thead><tr><th scope="col"><span class="sr-only">회당 탑승</span></th><th scope="col">φ 0.25</th><th scope="col">φ 0.35</th><th scope="col">φ 0.5</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">20명</th><td class="c-add"><b>−563</b><span>−754</span></td><td class="c-add"><b>−372</b><span>−498</span></td><td class="c-add"><b>−86</b><span>−115</span></td></tr>
+              <tr><th scope="row">30명</th><td class="c-add"><b>−340</b><span>−455</span></td><td class="c-add"><b>−54</b><span>−72</span></td><td class="c-cut"><b>+375</b><span>+502</span></td></tr>
+              <tr><th scope="row">44명</th><td class="c-add"><b>−28</b><span>−38</span></td><td class="c-cut"><b>+391</b><span>+524</span></td><td class="c-cut is-model"><b>+1,020</b><span>+1,367</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="prose">
+        <h3>같은 조건이면 현행 방식이 더 크게 나와요</h3>
+        <p>표4에서 탑승과 φ가 같으면 현행 방식의 절댓값이 더 커요. 현행 노선이 평균 39.2 km로 PCTR 축(29.3 km)보다 길어서, 승용차를 대신하는 거리도 길거든요.</p>
+        <p>그러니 PCTR 기준이 유리하다는 결론은 고PCTR 축의 탑승과 φ가 더 높다는 가설에 달려 있어요. 이 가설은 <a href="#hypothesis">가설 점검</a>에서 따로 흔들어 봤어요.</p>
+      </div>
+    </div>
 
-<section id="limits"><div class="wrap"><div class="prose">
-  <h2>아직 확인이 필요한 부분</h2>
-  <ul class="plain">
-    <li>편하G 이용자가 원래 무엇을 타던 사람인지 공개된 설문이 없어서, φ는 비슷한 서비스의 설문 값과 GTX-A 전환 사례로 대신했어요. 배분 축 목적지는 자체 통근버스가 있는 대기업이라 수요가 과대일 수 있어요.</li>
-    <li>수단 분담은 인구총조사 2020(코로나 시기) 기준이고, 국민연금 직장 주소는 사업장 등록지라 본사 소재지가 과대 집계될 수 있어요.</li>
-    <li>카카오맵 PC웹 대중교통 길찾기는 출발시각을 정할 수 없어 출근 시간대 혼잡이 반영되지 않았어요. 현대자동차가 유니버스 디젤과 쏠라티의 공인연비를 공개하지 않아 연비는 2차 자료로 산정했어요.</li>
-  </ul>
-</div></div></section>
+    <div class="split" style="margin-top:var(--s7)">
+      <figure class="figure">
+        <img src="assets/fig5_allocation.png" alt="모형 기준값의 2030 증편 100회 배분 비교와 15개 입력의 일변량 민감도" loading="lazy" width="1678" height="1654">
+        <figcaption>보고서 그림5. 모형 기준값의 배분 비교와 일변량 민감도예요. 결과를 정하는 입력은 φ 상한, 탑승률, 정원이고 수요 모형 입력은 거의 영향이 없어요. 보고서 그림에서는 PCTR 기준이 파랑, 현행 방식이 주황이에요.</figcaption>
+      </figure>
+      <div class="prose">
+        <h3>원래 대중교통을 타던 승객도 얻는 게 있어요</h3>
+        <p>승객 중 1−φ는 원래 대중교통 이용자라 탄소는 줄지 않아요. 대신 서울행 현행형 노선은 하루 약 777명을 광역버스·전철에서 옮겨 출근 혼잡을 덜고, PCTR 축의 약 1,100명은 통근시간이 줄어요.</p>
+        <ul class="gain" aria-label="배분 4개 축의 통근시간 변화, 대중교통에서 단지 정차 직행으로">
+          <li><span>평택→화성</span><span class="track" style="--b:60.0%;--a:27.4%"><i class="before"></i><i class="after"></i><span>151→69분</span></span></li>
+          <li><span>안산→화성</span><span class="track" style="--b:38.2%;--a:23.8%"><i class="before"></i><i class="after"></i><span>96→60분</span></span></li>
+          <li><span>화성→수원 영통</span><span class="track" style="--b:29.4%;--a:20.2%"><i class="before"></i><i class="after"></i><span>74→51분</span></span></li>
+          <li><span>고양→파주</span><span class="track" style="--b:25.0%;--a:18.3%"><i class="before"></i><i class="after"></i><span>63→46분</span></span></li>
+        </ul>
+        <p class="note" style="margin-top:10px">옅은 막대가 지금 대중교통, 주황이 단지 정차 직행의 문전 시간이에요.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 가설 점검 ================= -->
+<section class="sec sec--panel" id="hypothesis" aria-labelledby="hypothesis-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="hypothesis-title">결론이 기대는 가설을 세 번 흔들어 봤어요</h2>
+      <p class="sec-lede">“대중교통이 느린 축일수록 승용차 출신 승객이 많고 더 많이 탄다.” 이 가설이 틀리면 PCTR 기준의 이점도 사라져요. 그래서 세 가지로 점검했어요.</p>
+    </div>
+    <ol class="checks">
+      <li class="check">
+        <h3>φ 참고값이 약 2배예요</h3>
+        <div class="hbar"><span>배분 4개 축</span><span class="bar" style="--v:69%;--c:var(--car)"><i></i></span><b>0.69</b></div>
+        <div class="hbar"><span>현행 노선</span><span class="bar" style="--v:33%;--c:var(--seoul)"><i></i></span><b>0.33</b></div>
+        <div class="hbar"><span>그중 서울행</span><span class="bar" style="--v:27%;--c:var(--seoul)"><i></i></span><b>0.27</b></div>
+        <p>지금의 통근 수단 구성대로 승객이 온다고 본 값이에요. 같은 β 로짓에서 나온 값이라 독립 검증은 아니고, 실제로는 대중교통 이용자가 더 타서 이보다 낮아요.</p>
+      </li>
+      <li class="check">
+        <h3>넘어야 할 문턱이 낮아요</h3>
+        <div class="readouts" style="margin:6px 0 12px">
+          <div class="readout readout--sm"><span class="readout-value">0.8%</span><span class="readout-note">4개 축 승용차 통근자 중 옮겨 와야 할 비율</span></div>
+          <div class="readout readout--sm"><span class="readout-value">φ 0.56</span><span class="readout-note">현행 방식이 기준을 넘는 데 필요한 φ</span></div>
+        </div>
+        <p>15회 축은 하루 약 170명이 옮겨 오면 11명 기준을 넘어요. 반면 현행 방식은 승객 절반 이상이 승용차 출신이어야 해요.</p>
+      </li>
+      <li class="check">
+        <h3>2만 번 동시에 흔들어도</h3>
+        <div class="hbar"><span>PCTR 순감축</span><span class="bar" style="--v:61%;--c:var(--cut)"><i></i></span><b>61%</b></div>
+        <div class="hbar"><span>현행 순증가</span><span class="bar" style="--v:86%;--c:var(--add)"><i></i></span><b>86%</b></div>
+        <div class="hbar"><span>PCTR이 덜 배출</span><span class="bar" style="--v:87%;--c:var(--asphalt)"><i></i></span><b>87%</b></div>
+        <p>PCTR 기준 중앙값은 연 +124 t(90% 구간 −471~+973 t), 현행 방식은 −388 t예요. 탑승 PCTR 축 20~44명, 현행 15~40명, φ는 0.17~0.6과 0.15~0.35에서 뽑았어요.</p>
+      </li>
+    </ol>
+    <div class="split">
+      <figure class="figure">
+        <img src="assets/fig7_hypothesis.png" alt="(a) 현행 편하G 노선과 버스 후보 축의 φ 참고값 비교, (b) 2만 회 몬테카를로 연간 순감축 분포" loading="lazy" width="1633" height="947">
+        <figcaption>보고서 그림7. (a) 노선별 φ 참고값, (b) 2만 회 계산의 연간 순감축 분포예요. 점선은 중앙값이고, 이 그림에서는 PCTR 기준이 파랑, 현행 방식이 주황이에요.</figcaption>
+      </figure>
+      <div class="caveat" style="margin-top:0">
+        <p>두 방식에 같은 탑승과 φ를 주면 우위는 사라져요. 고PCTR 축의 φ가 높다는 걸 직접 검증한 국내 연구는 없고, 산단 공동통근버스 φ 17% 같은 반대 사례도 있어요. 그래서 <b>개통 전 주민 설문과 1년 시범 운행으로 회당 승용차 출신 승객 11명을 확인하자</b>는 게 제안의 핵심이에요.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 정책 제안 ================= -->
+<section class="sec" id="proposal" aria-labelledby="proposal-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="proposal-title">그래서 이렇게 제안해요</h2>
+      <p class="sec-lede">새 서비스를 만드는 대신, 이미 있는 편하G·똑버스를 어디에 어떤 방식으로 넣을지 정하는 절차를 바꾸자는 제안이에요.</p>
+    </div>
+    <ol class="rows rows--num">
+      <li><b>노선을 고를 때 PCTR과 11명 기준을 확인해요.</b><p>후보마다 주거지 5곳 인구가중 PCTR이 1.5 이상인지, 개통 전 주민 설문으로 본 회당 승용차 출신 승객이 11명 이상인지 보고, 넘지 못하면 수요관리로 돌려요.</p></li>
+      <li><b>2030 증편분은 경기 내부 산단 축부터 시범 배치해요.</b><p>평택→화성, 고양→파주, 안산→화성, 화성→수원 영통에 먼저 넣고, 1년 운행 실적(회당 탑승, 이전 수단)으로 11명 기준을 확인한 뒤 넓혀요.</p></li>
+      <li><b>증편 목적을 먼저 정해요.</b><p>탄소 감축이 목적이면 고PCTR 산단 축에 넣고, 서울행 축은 출근 혼잡 완화 수단으로 증편해 주차·혼잡 관리와 함께 써요.</p></li>
+      <li><b>걷는 게 문제인 축은 단지 안에 서는 직행으로 운영해요.</b><p>역 연계 DRT는 출근 대기를 7~11분 이하로 줄일 수 있을 때만 써요.</p></li>
+      <li><b>대기업 사업장 축은 기업 통근버스와 함께 짜요.</b><p>기아·LG디스플레이·현대차·삼성의 자체 버스가 닿지 않는 주거지와 협력사 직원을 도가 맡아요.</p></li>
+      <li><b>노선별 탑승 실적과 이전 이용 수단 설문을 공개해 주세요.</b><p>공개되면 11명 기준을 노선마다 바로 확인하고, φ와 수요 보정값을 노선 단위로 다시 맞출 수 있어요.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= 한계 ================= -->
+<section class="sec" id="limits" aria-labelledby="limits-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="limits-title">아직 확인이 필요한 부분</h2>
+      <p class="sec-lede">결론의 크기를 가장 크게 흔드는 건 승용차 출신 비율 φ예요. 나머지 한계도 숨기지 않고 적어 둘게요.</p>
+    </div>
+    <ul class="rows rows--label">
+      <li><b>승용차 출신 비율 φ</b><p>편하G 이용자의 이전 수단 설문이 없어 φ 0.25는 비슷한 서비스의 설문 값, 상한 0.5는 GTX-A 승용차 전환율 사례로 대신했어요. 배분 축 목적지 대기업은 자체 통근버스가 있어 φ와 수요가 과대일 수 있어요.</p></li>
+      <li><b>데이터 시점과 주소</b><p>수단 분담은 인구총조사 2020(코로나 시기) 기준이에요. 국민연금 직장 주소는 사업장 등록지라 본사 소재지가 과대 집계될 수 있어요. 출발점 5곳은 시 인구의 17~69%를 대표하고 목적지는 축마다 한 곳이에요.</p></li>
+      <li><b>모형·차량·통행시간</b><p>β는 자기선택 편향이 있고 관측 범위 밖으로 외삽했어요. 현대자동차가 유니버스 디젤과 쏠라티의 공인연비·공차중량을 공개하지 않아 2차 자료로 산정했어요. 카카오맵 PC웹 대중교통은 출발시각 설정이 없어 첨두 혼잡이 반영되지 않았고, ODsay 검증은 29쌍이에요.</p></li>
+    </ul>
+  </div>
+</section>
 
 </main>
 
-<footer><div class="wrap"><div class="prose">
-  <h2>더 자세히 보기</h2>
-  <div class="links">
-    <a href="https://github.com/ehdtn0843ds-dss/trafficman/blob/main/report/%EB%B2%84%EC%8A%A4%ED%83%80G_%EB%B6%84%EC%84%9D%EB%B3%B4%EA%B3%A0%EC%84%9C.pdf">분석보고서 PDF</a>
-    <a href="https://github.com/ehdtn0843ds-dss/trafficman">코드 저장소</a>
-    <a href="https://github.com/ehdtn0843ds-dss/trafficman/blob/main/docs/REPRODUCE.md">재현 가이드</a>
+<!-- ================= 더 보기 ================= -->
+<footer class="foot" id="more" aria-labelledby="more-title">
+  <div class="wrap">
+    <h2 id="more-title">더 자세히 보기</h2>
+    <div class="hero-links">
+      <a class="ticket ticket--light" href="https://github.com/ehdtn0843ds-dss/trafficman/blob/main/report/%EB%B2%84%EC%8A%A4%ED%83%80G_%EB%B6%84%EC%84%9D%EB%B3%B4%EA%B3%A0%EC%84%9C.pdf">분석보고서 PDF</a>
+      <a class="ticket ticket--light" href="https://github.com/ehdtn0843ds-dss/trafficman">코드 저장소</a>
+      <a class="ticket ticket--light" href="https://github.com/ehdtn0843ds-dss/trafficman/blob/main/docs/REPRODUCE.md">재현 가이드</a>
+    </div>
+    <ul class="thumbs" aria-label="보고서 그림">
+      <li><a href="assets/fig1_axes_map.png"><img src="assets/fig1_axes_map.png" alt="" loading="lazy">그림1 통근 축 지도</a></li>
+      <li><a href="assets/fig2_pctr_axes.png"><img src="assets/fig2_pctr_axes.png" alt="" loading="lazy">그림2 축별 PCTR</a></li>
+      <li><a href="assets/fig3_matrix.png"><img src="assets/fig3_matrix.png" alt="" loading="lazy">그림3 진단 분류</a></li>
+      <li><a href="assets/fig4_breakeven.png"><img src="assets/fig4_breakeven.png" alt="" loading="lazy">그림4 탄소 손익분기</a></li>
+      <li><a href="assets/fig5_allocation.png"><img src="assets/fig5_allocation.png" alt="" loading="lazy">그림5 배분과 민감도</a></li>
+      <li><a href="assets/fig6_census_logit.png"><img src="assets/fig6_census_logit.png" alt="" loading="lazy">그림6 수단 선택 로짓</a></li>
+      <li><a href="assets/fig7_hypothesis.png"><img src="assets/fig7_hypothesis.png" alt="" loading="lazy">그림7 가설 점검</a></li>
+    </ul>
+    <div class="foot-grid">
+      <div>
+        <h3>사용한 데이터</h3>
+        <p>국민연금공단 직장 거주지 이동 데이터(2025-12), 통계청 KOSIS 통근통학인구(2020), 행정안전부 주민등록 인구(2026-09), 행정동 경계(vuski/admdongkor), OpenStreetMap 주거 건물, 경기도 편하G버스 편성표, 카카오모빌리티·카카오맵 통행시간, ODsay 교차검증, 현대자동차 제원과 한국에너지공단 표시연비.</p>
+      </div>
+      <div>
+        <h3>AI는 이렇게 썼어요</h3>
+        <p>Anthropic Claude(Claude 앱의 에이전트 작업)와 함께했어요. 문제의식, PCTR로 대상지를 고르자는 아이디어, 분석 방향과 결과 검토는 팀이 맡았고, Claude는 선행 조사, 전처리, 카카오 조회 자동화, 모델·민감도 코드, 근거 조사, 시각화를 함께했어요. 페이지의 모든 수치는 저장소의 코드를 실행한 결과예요.</p>
+        <p>팀 버스타G</p>
+      </div>
+    </div>
   </div>
-  <p>데이터: 국민연금공단 직장 거주지 이동 데이터, 통계청 KOSIS 통근통학인구, 행정안전부 주민등록 인구, OpenStreetMap, 경기도 편하G버스 편성표, 카카오모빌리티·카카오맵 통행시간, ODsay 교차검증, 현대자동차 제원.</p>
-  <p>분석은 Anthropic Claude(Claude 앱 에이전트 작업)와 함께했어요. 문제의식, 대상지 선정 아이디어, 분석 방향과 결과 검토는 팀이 맡았고, 보고서의 모든 수치는 저장소의 코드를 실행한 결과예요.</p>
-  <p>팀 버스타G</p>
-</div></div></footer>
+</footer>
 
-<script>
-(function(){
-  // 손익분기 상수 (pctr_commute/result/capture_rate.json, 유니버스 디젤 44석·연비 3.49 km/L·회송 1회·재차 1.1명)
-  var C0=0.79307, CDH=0.61233, CPAX=0.0021842, CCAR=0.132923, AXIS_KM=29.3;
-  var mstar=function(n){return (C0+CDH+n*CPAX)/CCAR;};               // 필요한 회당 승용차 출신 승객 수
-  var netKgPerTrip=function(n,p){return (n*p*CCAR-(C0+CDH+n*CPAX))*AXIS_KM;}; // 회송 포함 출근 1회 순감축(kg)
-
-  var seatsEl=document.getElementById('seats'), n=document.getElementById('n'), phi=document.getElementById('phi');
-  var nOut=document.getElementById('nOut'), phiOut=document.getElementById('phiOut'), verdict=document.getElementById('verdict');
-  var presets=document.querySelectorAll('.presets button');
-  // 2+2 배열, 11열. 위 두 줄 + 통로 + 아래 두 줄. 앞줄(오른쪽)부터, 창가부터 채운다.
-  var order=[], seats=[];
-  for(var r=0;r<5;r++){ if(r===2){var a=document.createElement('div');a.className='aisle';seatsEl.appendChild(a);continue;}
-    for(var c=0;c<11;c++){var s=document.createElement('div');s.className='seat';seatsEl.appendChild(s);seats.push({el:s,row:r,col:c});}}
-  var rank={0:0,4:1,1:2,3:3};
-  seats.sort(function(a,b){return (b.col-a.col)||(rank[a.row]-rank[b.row]);}).forEach(function(s){order.push(s.el);});
-
-  function render(){
-    var N=+n.value, P=+phi.value, car=Math.round(N*P), need=mstar(N), net=netKgPerTrip(N,P);
-    nOut.textContent=N+'명'; phiOut.textContent=P.toFixed(2);
-    order.forEach(function(el,i){el.className='seat'+(i<car?' car':(i<N?' transit':''));});
-    seatsEl.setAttribute('aria-label','44석 중 '+N+'석 탑승, 그중 승용차 출신 '+car+'명');
-    var exact=(N*P).toFixed(1), head, cls;
-    if(N===0){head='아직 아무도 타지 않았어요';cls='add';}
-    else if(N*P>=need){head='승용차 출신 '+exact+'명, 탄소를 줄여요';cls='cut';}
-    else{head='승용차 출신 '+exact+'명, 아직 탄소가 늘어요';cls='add';}
-    verdict.innerHTML='<strong class="'+cls+'">'+head+'</strong>'+
-      '이 탑승 인원에서 본전은 승용차 출신 '+need.toFixed(1)+'명이에요. '+
-      (N>0?('29.3 km 축 기준 출근 1회(회송 포함)마다 약 '+Math.abs(net).toFixed(0)+' kg CO₂ '+(net>=0?'감축':'증가')+'.'):'')+
-      '<small>보고서와 같은 모형(유니버스 디젤 3.49 km/L, 회송 1회, 승용차 재차 1.1명)이에요.</small>';
-    presets.forEach(function(b){b.setAttribute('aria-pressed', (+b.dataset.n===N && +b.dataset.phi===P)?'true':'false');});
-  }
-  n.addEventListener('input',render); phi.addEventListener('input',render);
-  presets.forEach(function(b){b.addEventListener('click',function(){n.value=b.dataset.n;phi.value=b.dataset.phi;render();});});
-  render();
-})();
-</script>
+<script type="module" src="js/hero.js"></script>
+<script type="module" src="js/pipeline.js"></script>
 </body>
 </html>
