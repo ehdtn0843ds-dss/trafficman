@@ -52,51 +52,84 @@ function vizOrigin() {
   const el = $('#viz-origin');
   if (!el) return;
   const O = D.originPyeongtaek;
-  const W = widthOf(el), narrow = W < 480, H = narrow ? 400 : 300;
-  // 출발점 5곳은 실제 축척으로 확대해 그리고, 목적지는 왼쪽 끝에 두었어요(축 길이 41.2 km).
+  const W = widthOf(el), narrow = W < 480;
+  const H = narrow ? 440 : 300;
+  // 출발점 5곳은 실제 축척(같은 가로·세로 배율)으로 그리고, 목적지는 축척 밖이라 판 왼쪽 화살표로 방향만 보여 줘요.
   const lat0 = 37.02, kx = Math.cos((lat0 * Math.PI) / 180) * 111.32, ky = 110.57;
   const pts = O.pts.map((p) => ({ ...p, X: p.lng * kx, Y: -p.lat * ky }));
+  const cX = pts.reduce((a, p) => a + p.X, 0) / pts.length, cY = pts.reduce((a, p) => a + p.Y, 0) / pts.length;
+  const dKm = Math.hypot(O.dlng * kx - cX, -O.dlat * ky - cY);
   const minX = Math.min(...pts.map((p) => p.X)), maxX = Math.max(...pts.map((p) => p.X));
   const minY = Math.min(...pts.map((p) => p.Y)), maxY = Math.max(...pts.map((p) => p.Y));
-  // 오른쪽 점의 이름표("비전1동 4.9만 명")가 판 안에 들어오게 오른쪽 여백을 넉넉히 둬요.
-  const box = narrow ? { x0: 112, x1: W - 110, y0: 178, y1: H - 56 } : { x0: 286, x1: W - 160, y0: 58, y1: 222 };
+
+  // 판(지도)과 그 안의 점 영역, 오른쪽 이름표 열
+  const panel = narrow ? { x: 2, y: 138, w: W - 4, h: H - 142 } : { x: 168, y: 10, w: W - 170, h: H - 14 };
+  const labelW = narrow ? 126 : 118;
+  const box = { x0: panel.x + 64, x1: panel.x + panel.w - labelW - 26, y0: panel.y + 30, y1: panel.y + panel.h - 42 };
   const s = Math.min((box.x1 - box.x0) / (maxX - minX), (box.y1 - box.y0) / (maxY - minY));
-  const px = (X) => box.x0 + (X - minX) * s;
-  const py = (Y) => box.y0 + (Y - minY) * s;
-  const dx = narrow ? W - 40 : 40, dy = narrow ? 44 : 112;
+  const offX = box.x0 + ((box.x1 - box.x0) - (maxX - minX) * s) / 2;
+  const offY = box.y0 + ((box.y1 - box.y0) - (maxY - minY) * s) / 2;
+  const px = (X) => offX + (X - minX) * s;
+  const py = (Y) => offY + (Y - minY) * s;
   const maxPop = Math.max(...pts.map((p) => p.pop));
-  const rOf = (pop) => 7 + Math.sqrt(pop / maxPop) * 11;
-  const place = { 고덕동: ['end', -1, -1], 중앙동: ['start', 1, -1], 동삭동: ['start', 1, 0], 비전1동: ['start', 1, 0], 비전2동: ['end', -1, 1] };
+  const rOf = (pop) => 5 + Math.sqrt(pop / maxPop) * 6; // 겹치지 않게 작게: 5~11px
+
   let wT = 0, wC = 0;
   pts.forEach((p) => { wT += p.pop * p.ttr; wC += p.pop * p.tcar; });
   const pctrW = wT / wC;
   const single = D.top20.find((a) => a.dest === O.dest)?.single;
 
-  let g = svgOpen(W, H, `평택시 출발점 5곳과 기아 화성공장. 5곳 인구가중 PCTR ${pctrW.toFixed(2)}, 한 곳 기준 ${single}`);
-  // 시 경계 느낌의 옅은 판
-  const panelX = narrow ? 2 : 232, panelY = narrow ? 128 : 14;
-  g += `<rect x="${panelX}" y="${panelY}" width="${W - panelX - 2}" height="${H - panelY - 4}" rx="10" fill="#EDF1F4"/>`;
-  g += `<text x="${panelX + 16}" y="${H - 16}" class="axis-title">평택시 인구 상위 5개 행정동</text>`;
+  let g = svgOpen(W, H, `평택시 출발점 5곳의 실제 위치와 기아 화성공장 방향. 5곳 인구가중 PCTR ${pctrW.toFixed(2)}, 구청·역 한 곳 기준 ${single.toFixed(2)}`);
+  g += `<rect x="${panel.x}" y="${panel.y}" width="${panel.w}" height="${panel.h}" rx="10" fill="#EDF1F4"/>`;
+  g += `<text x="${panel.x + 14}" y="${panel.y + panel.h - 14}" class="axis-title">평택시 인구 상위 5개 행정동(실제 축척)</text>`;
+
+  // 목적지 화살표(판 왼쪽 가장자리, 점들의 평균 높이)
+  const ay = pts.reduce((a, p) => a + py(p.Y), 0) / pts.length;
+  const ax = panel.x + 14;
   pts.forEach((p) => {
-    const c1 = narrow ? `${px(p.X)} ${(py(p.Y) + dy) / 2}, ${dx} ${(py(p.Y) + dy) / 2 + 30}` : `${(px(p.X) + dx) / 2 + 40} ${py(p.Y)}, ${(px(p.X) + dx) / 2} ${dy}`;
-    g += `<path d="M${px(p.X)} ${py(p.Y)} C ${c1}, ${narrow ? dx : dx + 10} ${narrow ? dy + 10 : dy}" fill="none" stroke="#8C99A4" stroke-width="1.2" stroke-dasharray="3 4"/>`;
+    const x = px(p.X), y = py(p.Y), mx = (x + ax) / 2;
+    g += `<path d="M${x} ${y} C ${mx} ${y}, ${mx} ${ay}, ${ax + 12} ${ay}" fill="none" stroke="#8C99A4" stroke-width="1.1" stroke-dasharray="3 4"/>`;
   });
-  g += `<rect x="${dx - 9}" y="${dy - 9}" width="18" height="18" rx="2" class="fill-ink"/>`;
-  const da = narrow ? 'end' : 'start', dlx = narrow ? dx - 16 : dx - 9, dly = narrow ? dy + 4 : dy + 30;
-  g += `<text x="${dlx}" y="${dly}" text-anchor="${da}" class="data-label" style="font-size:12.5px">기아 화성공장</text><text x="${dlx}" y="${dly + 16}" text-anchor="${da}" class="axis-label">축 길이 41.2 km</text>`;
+  g += `<path d="M${ax + 14} ${ay - 8} L${ax} ${ay} L${ax + 14} ${ay + 8} Z" class="fill-ink"/>`;
+
+  // 목적지 설명(판 바깥 왼쪽, 좁은 화면에선 판 위)
+  const dtx = 4, dty = narrow ? 84 : ay - 18;
+  g += `<text x="${dtx}" y="${dty}" class="data-label" style="font-size:12.5px">← 기아 화성공장</text>`;
+  g += `<text x="${dtx}" y="${dty + 16}" class="axis-label">서쪽 직선 약 ${Math.round(dKm)} km</text>`;
+  g += `<text x="${dtx}" y="${dty + 31}" class="axis-label">(축 길이 41.2 km)</text>`;
+
+  // 점
   pts.forEach((p) => {
-    const r = rOf(p.pop), [anchor, hx, hy] = place[p.dong] || ['start', 1, 0];
-    const tx = px(p.X) + hx * (r + 6), ty = py(p.Y) + (hy === 0 ? 4 : hy * (r + 4)) + (hy > 0 ? 6 : 0);
-    g += `<circle cx="${px(p.X)}" cy="${py(p.Y)}" r="${r}" class="fill-car" fill-opacity=".9" stroke="#fff" stroke-width="2"><title>${esc(p.dong)} 인구 ${fmt(p.pop)}명, PCTR ${p.pctr}</title></circle>`;
-    g += `<text x="${tx}" y="${ty}" text-anchor="${anchor}" style="font-size:12px;font-weight:700">${esc(p.dong)} ${narrow ? '' : `<tspan class="axis-label" style="font-weight:400">${fmt(p.pop / 10000, 1)}만 명</tspan>`}</text>`;
+    g += `<circle cx="${px(p.X)}" cy="${py(p.Y)}" r="${rOf(p.pop)}" class="fill-car" fill-opacity=".92" stroke="#fff" stroke-width="1.5"><title>${esc(p.dong)} 인구 ${fmt(p.pop)}명, PCTR ${p.pctr}</title></circle>`;
   });
+
+  // 이름표: 오른쪽 열에 위→아래로 정렬하고 겹치지 않게 최소 간격을 둬요(지시선으로 연결)
+  const lx = panel.x + panel.w - labelW - 8, gap = narrow ? 30 : 32;
+  const order = pts.map((p) => ({ p, y: py(p.Y) })).sort((a, b) => a.y - b.y);
+  for (let i = 1; i < order.length; i++) if (order[i].y - order[i - 1].y < gap) order[i].y = order[i - 1].y + gap;
+  const over = order[order.length - 1].y - (panel.y + panel.h - 40);
+  if (over > 0) order.forEach((o) => { o.y -= over; });
+  for (let i = 0; i < order.length; i++) if (order[i].y < panel.y + 18) order[i].y = panel.y + 18 + i * gap;
+  order.forEach(({ p, y }) => {
+    const cx = px(p.X), cy = py(p.Y), r = rOf(p.pop);
+    g += `<path d="M${cx + r + 2} ${cy} L${lx - 14} ${y} L${lx - 4} ${y}" fill="none" stroke="#B4BEC7" stroke-width="1"/>`;
+    g += `<text x="${lx}" y="${y - 2}" style="font-size:12px;font-weight:700">${esc(p.dong)}</text>`;
+    g += `<text x="${lx}" y="${y + 12}" class="axis-label">${fmt(p.pop / 10000, 1)}만 명 · PCTR ${p.pctr.toFixed(2)}</text>`;
+  });
+
   // 2 km 축척
   const sb = 2 * s;
-  g += `<g transform="translate(${W - 20 - sb},${H - 20})"><line x1="0" y1="0" x2="${sb}" y2="0" class="axis-line" stroke-width="2"/><text x="${sb / 2}" y="-6" text-anchor="middle" class="axis-label">2 km</text></g>`;
-  // 결과 비교
-  const rx = narrow ? 4 : 31, ry = narrow ? 30 : H - 64;
-  g += `<text x="${rx}" y="${ry}" class="axis-label">5곳 인구가중 PCTR</text><text x="${rx}" y="${ry + 30}" class="data-label" style="font-size:28px;font-family:var(--display)">${pctrW.toFixed(2)}</text>`;
-  g += `<text x="${rx + 111}" y="${ry}" class="axis-label">구청·역 한 곳</text><text x="${rx + 111}" y="${ry + 30}" class="t-muted" style="font-size:28px;font-family:var(--display)">${single.toFixed(2)}</text>`;
+  g += `<g transform="translate(${panel.x + panel.w - 18 - sb},${panel.y + panel.h - 14})"><line x1="0" y1="0" x2="${sb}" y2="0" class="axis-line" stroke-width="2"/><text x="${sb / 2}" y="-6" text-anchor="middle" class="axis-label">2 km</text></g>`;
+
+  // 결과 비교(넓은 화면: 판 왼쪽 아래 / 좁은 화면: 맨 위)
+  if (narrow) {
+    g += `<text x="4" y="18" class="axis-label">5곳 인구가중 PCTR</text><text x="4" y="48" class="data-label" style="font-size:28px;font-family:var(--display)">${pctrW.toFixed(2)}</text>`;
+    g += `<text x="${W / 2}" y="18" class="axis-label">구청·역 한 곳</text><text x="${W / 2}" y="48" class="t-muted" style="font-size:28px;font-family:var(--display)">${single.toFixed(2)}</text>`;
+  } else {
+    const ry = H - 104;
+    g += `<text x="4" y="${ry}" class="axis-label">5곳 인구가중 PCTR</text><text x="4" y="${ry + 30}" class="data-label" style="font-size:28px;font-family:var(--display)">${pctrW.toFixed(2)}</text>`;
+    g += `<text x="4" y="${ry + 56}" class="axis-label">구청·역 한 곳</text><text x="4" y="${ry + 86}" class="t-muted" style="font-size:28px;font-family:var(--display)">${single.toFixed(2)}</text>`;
+  }
   g += '</svg>';
   el.innerHTML = g;
 }
