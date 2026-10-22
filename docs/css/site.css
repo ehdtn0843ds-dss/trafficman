@@ -404,7 +404,6 @@ h1,h2,h3,.verdict-head,.strip-title{text-wrap:balance}
 .code-path code{font-family:inherit;font-size:inherit;color:var(--ink-2);background:var(--panel);padding:1px 6px;border-radius:3px}
 .stage-viz{min-width:0;display:flex;flex-direction:column;justify-content:center}
 .stage-foot{display:flex;justify-content:space-between;align-items:center;gap:var(--s3);padding:var(--s4) var(--s6);border-top:1px solid var(--line)}
-.stage-foot .hint{font-size:var(--fs-xs);color:var(--muted)}
 .stage-foot [hidden]{display:none}
 .ticket[disabled]{opacity:.35;cursor:default;pointer-events:none}
 
@@ -645,7 +644,6 @@ table.data caption{text-align:left;font-size:var(--fs-xs);color:var(--muted);cap
   .seat.is-need::after{inset:-3px}
   .stage-panel{padding:var(--s4)}
   .stage-foot{padding:var(--s3) var(--s4)}
-  .stage-foot .hint{display:none}
   .stop-dot{width:26px;height:26px;border-width:4px;font-size:12px}
   .route-track{top:48px;left:13px;right:13px}
   .thumbs{grid-template-columns:repeat(3,minmax(0,1fr))}
