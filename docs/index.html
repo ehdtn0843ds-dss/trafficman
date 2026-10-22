@@ -34,7 +34,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
 
 <header class="sign">
   <div class="wrap">
-    <a class="brand" href="#top" aria-label="버스타G 맨 위로"><span class="brand-no" aria-hidden="true">G</span><b>버스타G</b></a>
+    <a class="brand" href="#top" aria-label="버스타G 맨 위로"><span class="brand-no" aria-hidden="true">G</span><b translate="no">버스타G</b></a>
     <nav aria-label="페이지 안 이동">
       <a href="#how">만든 과정</a>
       <a href="#simulator">시뮬레이터</a>
@@ -54,7 +54,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
   <div class="wrap">
       <h1 id="hero-title">버스 한 번이 탄소를 줄이려면, <span class="seat-word">약 11자리는</span> 승용차에서 와야 해요</h1>
 
-      <div class="strip" id="gist" aria-labelledby="gist-title">
+      <div class="strip" id="gist">
         <h2 class="strip-title" id="gist-title">그래서 경기도 2030 증편 100회를 어디에 넣을까</h2>
         <ul class="strip-rows">
           <li class="strip-row strip-row--seoul">
@@ -63,15 +63,15 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
             <div class="prob" style="--v:86%;--pc:var(--add)" aria-hidden="true"><i></i></div>
           </li>
           <li class="strip-row strip-row--pctr">
-            <p class="strip-name"><span class="vs-line" aria-hidden="true"></span><b><span class="term-wrap"><button type="button" class="term" aria-describedby="tip-pctr">PCTR</button><span class="term-tip" role="tooltip" id="tip-pctr">대중교통 시간 ÷ 승용차 시간이에요. 1보다 크면 대중교통이 느리고, 2면 두 배 오래 걸려요. 이 값이 큰 축부터 버스를 넣는 게 ‘PCTR 기준’이에요.</span></span> 기준</b><span>경기 내부 산단 4개 축: 평택→화성 · 고양→파주 · 안산→화성 · 화성→수원 영통</span></p>
+            <p class="strip-name"><span class="vs-line" aria-hidden="true"></span><b><span class="term-wrap"><button type="button" class="term" aria-describedby="tip-pctr" translate="no">PCTR</button><span class="term-tip" role="tooltip" id="tip-pctr">대중교통 시간 ÷ 승용차 시간이에요. 1보다 크면 대중교통이 느리고, 2면 두 배 오래 걸려요. 이 값이 큰 축부터 버스를 넣는 게 ‘PCTR 기준’이에요.</span></span> 기준</b><span>경기 내부 산단 4개 축: 평택→화성 · 고양→파주 · 안산→화성 · 화성→수원 영통</span></p>
             <p class="strip-prob is-cut"><b>61%</b><span>탄소가 줄 확률</span></p>
             <div class="prob" style="--v:61%;--pc:var(--cut)" aria-hidden="true"><i></i></div>
           </li>
         </ul>
-        <p class="strip-foot">탑승·<span class="term-wrap"><button type="button" class="term" aria-describedby="tip-phi">φ</button><span class="term-tip" role="tooltip" id="tip-phi">승객 중 원래 승용차로 출근하던 사람의 비율이에요. 나머지(1−φ)는 원래 전철·광역버스를 타던 사람이라 탄소가 줄지 않아요.</span></span>·연비 등을 2만 번 흔든 결과예요. <span class="term-wrap"><button type="button" class="term" aria-describedby="tip-model">모형 기준값</button><span class="term-tip" role="tooltip" id="tip-model">회당 44명·φ 0.5처럼 모형이 정한 수요를 넣은 값이에요. 현행 방식은 노선마다 모형 수요(평균 약 20명·φ 0.25)를 넣었어요.</span></span>으로는 현행 연 793 tCO₂ 증가, PCTR 기준 연 1,020 tCO₂ 감축이에요. 이 차이는 <b>“대중교통이 느린 축일수록 승용차 출신 승객이 많고 더 많이 탄다”</b>는 가설에 기대요. <a href="#hypothesis">가설 점검 보기</a></p>
+        <p class="strip-foot">탑승·<span class="term-wrap"><button type="button" class="term" aria-describedby="tip-phi">φ</button><span class="term-tip" role="tooltip" id="tip-phi">승객 중 원래 승용차로 출근하던 사람의 비율이에요. 나머지(1−φ)는 원래 전철·광역버스를 타던 사람이라 탄소가 줄지 않아요.</span></span>·연비 등을 2만 번 흔든 결과예요. <span class="term-wrap"><button type="button" class="term" aria-describedby="tip-model">모형 기준값</button><span class="term-tip" role="tooltip" id="tip-model">회당 44명·φ 0.5처럼 모형이 정한 수요를 넣은 값이에요. 현행 방식은 노선마다 모형 수요(평균 약 20명·φ 0.25)를 넣었어요.</span></span>으로는 현행 연 793&nbsp;tCO₂ 증가, PCTR 기준 연 1,020&nbsp;tCO₂ 감축이에요. 이 차이는 <b>“대중교통이 느린 축일수록 승용차 출신 승객이 많고 더 많이 탄다”</b>는 가설에 기대요. <a href="#hypothesis">가설 점검 보기</a></p>
       </div>
 
-      <div class="bus" id="bus" aria-labelledby="bus-title">
+      <div class="bus" id="bus" role="group" aria-labelledby="bus-title">
         <div class="bus-sign">
           <span class="dest" id="bus-dest">현행 편하G 평균</span>
           <span class="spec" id="bus-title">디젤 44석 · 출근 1회 + 회송 1회</span>
@@ -92,19 +92,20 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
           <span><i class="k-need"></i>본전까지 더 필요한 승용차 출신 자리</span>
         </div>
         <div class="bus-controls">
-          <label class="ctl"><span class="ctl-label">회당 탑승</span><input class="range" type="range" id="n" min="0" max="44" step="1" value="20"><output class="ctl-out" id="nOut" for="n">20명</output></label>
-          <label class="ctl"><span class="ctl-label">승용차 출신 비율 φ<small>승객 중 원래 승용차로 출근하던 비율</small></span><input class="range range--car" type="range" id="phi" min="0" max="1" step="0.05" value="0.25"><output class="ctl-out" id="phiOut" for="phi">0.25</output></label>
+          <label class="ctl"><span class="ctl-label">회당 탑승</span><input class="range" type="range" id="n" min="0" max="44" step="1" value="20" autocomplete="off"><output class="ctl-out" id="nOut" for="n">20명</output></label>
+          <label class="ctl"><span class="ctl-label">승용차 출신 비율 φ<small>승객 중 원래 승용차로 출근하던 비율</small></span><input class="range range--car" type="range" id="phi" min="0" max="1" step="0.05" value="0.25" autocomplete="off"><output class="ctl-out" id="phiOut" for="phi">0.25</output></label>
           <div class="chips" role="group" aria-label="예시 값">
             <button class="chip" type="button" data-n="20" data-phi="0.25" data-dest="현행 편하G 평균" aria-pressed="true">현행 편하G 수준 (약 20명, φ 0.25)</button>
             <button class="chip" type="button" data-n="44" data-phi="0.25" data-dest="만석, 같은 φ" aria-pressed="false">만석이어도 φ 0.25</button>
             <button class="chip" type="button" data-n="44" data-phi="0.5" data-dest="경기 내부 산단 축" aria-pressed="false">산단 축 모형값 (44명, φ 0.5)</button>
           </div>
         </div>
-        <div class="bus-verdict is-add" id="verdict" aria-live="polite"><strong class="verdict-head">승용차 출신 5.0명, 아직 탄소가 늘어요</strong><div class="meter" style="--v:11.4%;--t:24.8%" aria-hidden="true"><i></i><b></b></div><p class="verdict-text">이 탑승 인원에서 본전은 승용차 출신 <b>10.9명</b>이에요. 29.3 km 축 기준 출근 1회(회송 포함)마다 약 23 kg CO₂가 늘어요.<small>보고서와 같은 모형이에요. 유니버스 디젤 3.49 km/L, 회송 1회, 승용차 재차 1.1명.</small></p></div>
-        <p class="bus-note" id="bus-note" hidden></p>
+        <div class="bus-verdict is-add" id="verdict"><strong class="verdict-head">승용차 출신 5.0명, 아직 탄소가 늘어요</strong><div class="meter" style="--v:11.4%;--t:24.8%" aria-hidden="true"><i></i><b></b></div><p class="verdict-text">이 탑승 인원에서 본전은 승용차 출신 <b>10.9명</b>이에요. 29.3&nbsp;km 축 기준 출근 1회(회송 포함)마다 약 23&nbsp;kg&nbsp;CO₂가 늘어요.<small>보고서와 같은 모형이에요. 유니버스 디젤 3.49&nbsp;km/L, 회송 1회, 승용차 재차 1.1명.</small></p></div>
+        <p class="sr-only" aria-live="polite" id="verdict-live"></p>
+        <p class="bus-note" id="bus-note" role="status" hidden></p>
       </div>
 
-      <p class="lede">경기도 출퇴근 버스 <span class="term-wrap"><button type="button" class="term" aria-describedby="tip-gbus">편하G</button><span class="term-tip" role="tooltip" id="tip-gbus">경기도가 운영하는 좌석·예약형 출퇴근 버스예요. 2026년 하루 84회에서 2030년 184회로 늘릴 계획이에요.</span></span>를 어느 길에 넣어야 승용차 통근이 실제로 줄어드는지, 국민연금 통근 데이터와 직접 잰 통행시간 127쌍으로 따져 봤어요.</p>
+      <p class="lede">경기도 출퇴근 버스 <span class="term-wrap"><button type="button" class="term" aria-describedby="tip-gbus" translate="no">편하G</button><span class="term-tip" role="tooltip" id="tip-gbus">경기도가 운영하는 좌석·예약형 출퇴근 버스예요. 2026년 하루 84회에서 2030년 184회로 늘릴 계획이에요.</span></span>를 어느 길에 넣어야 승용차 통근이 실제로 줄어드는지, 국민연금 통근 데이터와 직접 잰 통행시간 127쌍으로 따져 봤어요.</p>
       <p class="hero-meta">숲과나눔 × 한겨레 「AI와 함께하는 교통문제 해결을 위한 데이터 분석 공모전」 출품작, 팀 버스타G</p>
       <div class="hero-links">
         <a class="ticket ticket--solid" href="#how">만든 과정 보기</a>
@@ -157,7 +158,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
             <div><dt>팀의 방향</dt><dd><q>승용차 절대 통행량을 줄이는 게 우선이다.</q></dd></div>
             <div><dt>에이전트</dt><dd>국민연금 OD 전처리, 축별 승용차 통근자 1차 추정</dd></div>
           </dl>
-          <p class="code-path">코드 <code>pctr_commute/build_commute_axes.py</code></p>
+          <p class="code-path">코드 <code translate="no">pctr_commute/build_commute_axes.py</code></p>
         </div>
         <div class="stage-viz">
           <figure class="chart">
@@ -182,7 +183,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
             <div><dt>팀의 방향</dt><dd><q>출발점을 구청이 아니라 주거 밀집 지역 4~5곳으로 잡고, 목적지까지 시간 평균을 쓰자.</q></dd></div>
             <div><dt>에이전트</dt><dd>행정동 인구 정리, OSM 주거 건물 조회와 대표점 계산</dd></div>
           </dl>
-          <p class="code-path">코드 <code>resid/aggregate.py</code></p>
+          <p class="code-path">코드 <code translate="no">resid/aggregate.py</code></p>
         </div>
         <div class="stage-viz">
           <figure class="chart">
@@ -206,7 +207,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
           <dl class="roles">
             <div><dt>에이전트</dt><dd>카카오 API·카카오맵 웹 조회 자동화, ODsay 교차검증</dd></div>
           </dl>
-          <p class="code-path">코드 <code>apimeasure/measure_car_kakao.py</code> <code>apimeasure/build_inputs.py</code></p>
+          <p class="code-path">코드 <code translate="no">apimeasure/measure_car_kakao.py</code> <code translate="no">apimeasure/build_inputs.py</code></p>
         </div>
         <div class="stage-viz">
           <figure class="chart">
@@ -229,7 +230,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
             <div><dt>PCTR 1.5 이상 출발점 (경기 내부 / 서울행)</dt><dd>41<small>/50</small> · 0<small>/50</small></dd></div>
             <div><dt>현행 편하G 28개 노선 평균</dt><dd>1.06</dd></div>
           </dl>
-          <p class="code-path">코드 <code>resid/aggregate.py</code></p>
+          <p class="code-path">코드 <code translate="no">resid/aggregate.py</code></p>
         </div>
         <div class="stage-viz">
           <figure class="chart">
@@ -238,7 +239,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
             <figcaption class="chart-cap">승용차 통근 상위 20개 축의 PCTR. 점은 5곳 인구가중 값, 가로선은 5곳의 범위예요. 맨 아래 줄은 현행 편하G 28개 노선을 같은 방식으로 잰 값이에요.</figcaption>
           </figure>
           <div class="thr" id="thr-box">
-            <label class="ctl ctl--thr"><span class="ctl-label">분류 기준 PCTR<small>보고서 기준 1.5</small></span><input class="range" type="range" id="thr" min="1" max="2.6" step="0.05" value="1.5" aria-describedby="thr-note"><output class="ctl-out" id="thrOut" for="thr">1.50</output></label>
+            <label class="ctl ctl--thr"><span class="ctl-label">분류 기준 PCTR<small>보고서 기준 1.5</small></span><input class="range" type="range" id="thr" min="1" max="2.6" step="0.05" value="1.5" aria-describedby="thr-note" autocomplete="off"><output class="ctl-out" id="thrOut" for="thr">1.50</output></label>
             <p class="thr-out" id="thr-out" aria-live="polite">20개 축 중 버스 후보 <b>9개</b>(서울행 0개), 수요관리 <b>11개</b>예요. 현행 편하G 28개 노선 중 기준을 넘는 노선은 <b>1개</b>예요.</p>
             <p class="note" id="thr-note">기준을 끌어 보면 20개 축의 분류만 다시 나눠 봐요. 6단계 이후의 진단·배분·탄소 계산은 보고서 기준 1.5로 한 결과예요. <button class="chip" type="button" id="thr-reset" hidden>1.5로 되돌리기</button></p>
           </div>
@@ -260,7 +261,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
             <div><dt>팀의 방향</dt><dd><q>국민연금 자료에는 차량·대중교통 비율이 없으니 이 공백을 채우자.</q></dd></div>
             <div><dt>에이전트</dt><dd>KOSIS 통근 자료 전처리, 회귀·축 모형 코드</dd></div>
           </dl>
-          <p class="code-path">코드 <code>pctr_commute/fit_beta.py</code> <code>pctr_commute/axis_model.py</code></p>
+          <p class="code-path">코드 <code translate="no">pctr_commute/fit_beta.py</code> <code translate="no">pctr_commute/axis_model.py</code></p>
         </div>
         <div class="stage-viz">
           <figure class="chart">
@@ -283,7 +284,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
             <div><dt>출퇴근 직행</dt><dd>2<small>개</small></dd></div>
             <div><dt>버스를 새로 넣을 후보</dt><dd>9<small>개</small></dd></div>
           </dl>
-          <p class="code-path">코드 <code>pctr_commute/axis_model.py</code></p>
+          <p class="code-path">코드 <code translate="no">pctr_commute/axis_model.py</code></p>
         </div>
         <div class="stage-viz">
           <figure class="chart">
@@ -310,12 +311,12 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
             <div><dt>팀의 방향</dt><dd><q>엔진맵 없이 탄소 손익분기 모델을 만들자.</q></dd></div>
             <div><dt>에이전트</dt><dd>차량 제원·연비 근거 조사, 손익분기 코드</dd></div>
           </dl>
-          <p class="code-path">코드 <code>pctr_commute/breakeven.py</code></p>
+          <p class="code-path">코드 <code translate="no">pctr_commute/breakeven.py</code></p>
         </div>
         <div class="stage-viz">
           <figure class="chart">
             <div id="viz-breakeven"></div>
-            <figcaption class="chart-cap">유니버스 디젤 44석, 연비 3.49 km/L, 회송 1회, 승용차 재차 1.1명 기준. 곡선 위쪽에서 버스가 탄소를 줄여요.</figcaption>
+            <figcaption class="chart-cap">유니버스 디젤 44석, 연비 3.49&nbsp;km/L, 회송 1회, 승용차 재차 1.1명 기준. 곡선 위쪽에서 버스가 탄소를 줄여요.</figcaption>
           </figure>
         </div>
       </article>
@@ -332,7 +333,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
             <div><dt>축당 상한</dt><dd>15<small>회</small></dd></div>
             <div><dt>증편이 배분된 축</dt><dd>4<small>개</small></dd></div>
           </dl>
-          <p class="code-path">코드 <code>pctr_commute/axis_model.py</code></p>
+          <p class="code-path">코드 <code translate="no">pctr_commute/axis_model.py</code></p>
         </div>
         <div class="stage-viz">
           <figure class="chart">
@@ -357,13 +358,13 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
             <div><dt>팀의 방향</dt><dd><q>추정값으로 되어 있는 것은 모두 확실한 근거를 찾아서 바꾸자.</q></dd></div>
             <div><dt>에이전트</dt><dd>입력값 근거 문헌 조사, 민감도·몬테카를로 코드</dd></div>
           </dl>
-          <p class="code-path">코드 <code>pctr_commute/sensitivity.py</code> <code>pctr_commute/montecarlo.py</code></p>
+          <p class="code-path">코드 <code translate="no">pctr_commute/sensitivity.py</code> <code translate="no">pctr_commute/montecarlo.py</code></p>
         </div>
         <div class="stage-viz">
           <figure class="chart">
             <ul class="key"><li><span class="sw sw--car"></span>PCTR 기준</li><li><span class="sw sw--seoul"></span>현행 방식</li></ul>
             <div id="viz-mc"></div>
-            <figcaption class="chart-cap">2만 회 계산의 연간 순감축 분포(100 tCO₂/년 간격). 0보다 오른쪽이 감축이에요. 중앙값은 PCTR 기준 연 124 tCO₂ 감축, 현행 방식 연 388 tCO₂ 증가예요.</figcaption>
+            <figcaption class="chart-cap">2만 회 계산의 연간 순감축 분포(100&nbsp;tCO₂/년 간격). 0보다 오른쪽이 감축이에요. 중앙값은 PCTR 기준 연 124&nbsp;tCO₂ 감축, 현행 방식 연 388&nbsp;tCO₂ 증가예요.</figcaption>
           </figure>
         </div>
       </article>
@@ -372,6 +373,7 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
         <button class="ticket" type="button" id="step-prev">이전 단계</button>
         <span class="hint">정류장을 누르거나 ← → 키로 넘길 수 있어요</span>
         <button class="ticket ticket--solid" type="button" id="step-next">다음 단계</button>
+        <a class="ticket ticket--solid" id="step-go" href="#simulator" hidden>직접 계산해 보기</a>
       </div>
     </div>
   </div>
@@ -385,7 +387,8 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
       <p class="sec-lede">탑승·φ·연비를 바꿔 가며 두 방식의 연간 탄소를 직접 계산해 보세요. 예시 조건을 누르거나 슬라이더를 움직이면 결과가 바로 바뀌어요.</p>
     </div>
     <div class="mount" id="simulator-root" data-state="empty">
-      <p class="mount-empty">시뮬레이터가 이 자리에 들어와요.</p>
+      <p class="mount-empty mount-loading" role="status">시뮬레이터 불러오는 중…</p>
+      <noscript><p class="mount-empty">이 기능은 JavaScript가 필요해요.</p></noscript>
     </div>
   </div>
 </section>
@@ -398,7 +401,8 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
       <p class="sec-lede">분석한 20개 통근 축을 지도에 그렸어요. 축을 고르면 출발점 5곳의 통행시간과 PCTR, 진단 결과, 배분된 증편 횟수가 나오고, 그 축에 버스를 직접 넣어 볼 수도 있어요.</p>
     </div>
     <div class="mount" id="explorer-root" data-state="empty">
-      <p class="mount-empty">축 지도 탐색기가 이 자리에 들어와요.</p>
+      <p class="mount-empty mount-loading" role="status">축 탐색기 불러오는 중…</p>
+      <noscript><p class="mount-empty">이 기능은 JavaScript가 필요해요.</p></noscript>
     </div>
   </div>
 </section>
@@ -418,8 +422,8 @@ setTimeout(function(){if(!window.__heroAnim)d.classList.remove('hero-anim')},300
         <caption>출근 50회 + 퇴근 50회, 연 245일, 하루 이용은 실인원이에요. <span class="cap-note">* 19.5명은 노선 수요를 맞춘 보정 목표예요. 노선별 수요를 반영하면 평균 20.6명이 타서 하루 1,032명이에요.</span></caption>
         <thead><tr><th scope="col">구분</th><th scope="col" class="num">연간 순감축</th><th scope="col">배분 대상</th><th scope="col">회당 탑승 × φ</th><th scope="col" class="num">하루 이용</th><th scope="col" class="num">승용차 출신</th><th scope="col" class="num">대중교통 출신</th></tr></thead>
         <tbody>
-          <tr><th scope="row" class="row-name" style="--c:var(--car)"><i aria-hidden="true"></i>PCTR 기준</th><td class="num pos td-net" data-label="연간 순감축">+1,020 tCO₂/년</td><td data-label="배분 대상">경기 내부 4개 축</td><td data-label="회당 탑승 × φ">44명 × 0.5 = 22명</td><td class="num" data-label="하루 이용">2,200명</td><td class="num" data-label="승용차 출신">1,100명</td><td class="num" data-label="대중교통 출신">1,100명</td></tr>
-          <tr><th scope="row" class="row-name" style="--c:var(--seoul)"><i aria-hidden="true"></i>현행 방식</th><td class="num neg td-net" data-label="연간 순감축">−793 tCO₂/년</td><td data-label="배분 대상">현 28개 노선에 비례</td><td data-label="회당 탑승 × φ">19.5명* × 0.25 ≈ 5명</td><td class="num" data-label="하루 이용">1,032명</td><td class="num" data-label="승용차 출신">256명</td><td class="num" data-label="대중교통 출신">777명</td></tr>
+          <tr><th scope="row" class="row-name" style="--c:var(--car)"><i aria-hidden="true"></i>PCTR 기준</th><td class="num pos td-net" data-label="연간 순감축">+1,020&nbsp;tCO₂/년</td><td data-label="배분 대상">경기 내부 4개 축</td><td data-label="회당 탑승 × φ">44명 × 0.5 = 22명</td><td class="num" data-label="하루 이용">2,200명</td><td class="num" data-label="승용차 출신">1,100명</td><td class="num" data-label="대중교통 출신">1,100명</td></tr>
+          <tr><th scope="row" class="row-name" style="--c:var(--seoul)"><i aria-hidden="true"></i>현행 방식</th><td class="num neg td-net" data-label="연간 순감축">−793&nbsp;tCO₂/년</td><td data-label="배분 대상">현 28개 노선에 비례</td><td data-label="회당 탑승 × φ">19.5명* × 0.25 ≈ 5명</td><td class="num" data-label="하루 이용">1,032명</td><td class="num" data-label="승용차 출신">256명</td><td class="num" data-label="대중교통 출신">777명</td></tr>
         </tbody>
       </table>
     </div>

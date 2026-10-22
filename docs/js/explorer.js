@@ -29,7 +29,7 @@ if (root) {
   Promise.all([loadModel(MODEL_URL), outline]).then(([, ol]) => start(ol)).catch((e) => {
     // 안내문만 보여요(콘솔 오류는 남기지 않아요)
     const el = root.querySelector('.mount-empty');
-    if (el) el.textContent = '지도 데이터를 불러오지 못했어요. 페이지를 새로 고쳐 주세요.';
+    if (el) { el.setAttribute('role', 'status'); el.textContent = '지도 데이터를 불러오지 못했어요. 페이지를 새로 고쳐 주세요.'; }
     void e;
   });
 }
@@ -187,13 +187,13 @@ function start(OL) {
       <h3 id="ex-find-title">내 통근길 찾기</h3>
       <div class="ex-find-row">
         <label class="ex-field"><span>출발 시군</span>
-          <select class="field" id="ex-from"><option value="">고르세요</option>${FROMS.map((n) => {
+          <select class="field" id="ex-from" autocomplete="off"><option value="">고르세요</option>${FROMS.map((n) => {
             const k = axesFrom(n).length;
             return `<option value="${esc(n)}">${esc(n)}${k ? ` (분석 축 ${k}개)` : ''}</option>`;
           }).join('')}</select></label>
         <span class="ex-find-arrow" aria-hidden="true">→</span>
         <label class="ex-field"><span>목적지 <small id="ex-to-sub">출발 시군을 먼저 골라 주세요</small></span>
-          <select class="field" id="ex-to" disabled><option value="">고르세요</option></select></label>
+          <select class="field" id="ex-to" disabled autocomplete="off"><option value="">고르세요</option></select></label>
       </div>
       <div class="ex-find-out" id="ex-find-out" aria-live="polite"><p>출발 시군을 고르면 그곳에서 출발하는 분석 축의 목적지가 나와요.</p></div>
     </div>`;
@@ -206,7 +206,7 @@ function start(OL) {
         <button type="button" data-view="map" aria-pressed="true">지도로 보기</button>
         <button type="button" data-view="list" aria-pressed="false">목록으로 보기</button>
       </div>
-      <label class="switch"><input type="checkbox" id="ex-routes-on"><span>현행 편하G 28개 노선 겹쳐 보기</span></label>
+      <label class="switch"><input type="checkbox" id="ex-routes-on" autocomplete="off"><span>현행 편하G 28개 노선 겹쳐 보기</span></label>
     </div>
     ${finder}
     <div class="ex-grid">
@@ -232,7 +232,7 @@ function start(OL) {
           </table></div>
         </div>
       </div>
-      <div class="panel ex-detail" id="ex-detail" aria-labelledby="ex-d-title" tabindex="-1"></div>
+      <div class="panel ex-detail" id="ex-detail" role="region" aria-labelledby="ex-d-title" tabindex="-1"></div>
     </div>
     <p class="sr-only" aria-live="polite" id="ex-live"></p>
   </div>`;
@@ -310,8 +310,8 @@ function start(OL) {
       <span>PCTR <b>${a.PCTR.toFixed(2)}</b></span>
       <span class="tag ${TAG[a.diag] ?? 'tag--hold'}">${esc(a.diag)}</span>
       <span>${a.alloc_am ? `배분 ${a.alloc_am}회` : '배분 없음'}</span>
-      <span>출근 ${n}회 <b class="${n && r.t >= 0.5 ? 'pos' : n && r.t <= -0.5 ? 'neg' : ''}">${n ? sgn(r.t) : '0'}</b> tCO₂/년</span>
-      <button type="button" class="chip ex-strip-go" id="ex-strip-go">자세히</button>`;
+      <span>출근 ${n}회 <b class="${n && r.t >= 0.5 ? 'pos' : n && r.t <= -0.5 ? 'neg' : ''}">${n ? sgn(r.t) : '0'}</b>\u00A0tCO₂/년</span>
+      <button type="button" class="chip ex-strip-go" id="ex-strip-go" aria-label="이 축 자세히 보기">자세히</button>`;
     $('#ex-strip-go').addEventListener('click', () => {
       const d = $('#ex-detail');
       d.scrollIntoView({ behavior: reduceMQ.matches ? 'auto' : 'smooth', block: 'start' });
@@ -334,7 +334,7 @@ function start(OL) {
     $('#ex-detail').innerHTML = `
       <div>
         <h3 id="ex-d-title">${esc(axisName(a.key))}</h3>
-        <p class="ex-dest">목적지 ${esc(a.dest)} (${esc(a.dest_sgg)}) · 승용차 거리 ${a.car_km} km</p>
+        <p class="ex-dest">목적지 ${esc(a.dest)} (${esc(a.dest_sgg)}) · 승용차 거리 ${a.car_km}\u00A0km</p>
         <div class="ex-tags">
           <span class="tag ${a.seoul ? 'tag--s' : 'tag--g'}">${a.seoul ? '서울행' : '경기 내부'}</span>
           <span class="tag ${TAG[a.diag] ?? 'tag--hold'}">진단: ${esc(a.diag)}</span>
@@ -367,7 +367,7 @@ function start(OL) {
       </dl>
       <div class="ex-try">
         <label class="ctl"><span class="ctl-label">이 축에 출근 n회 넣어 보기<small>퇴근도 같은 횟수 · 처음 값은 ${a.alloc_am ? `보고서 배분 ${a.alloc_am}회` : cand ? '예시 5회(보고서 배분 없음)' : '0회(수요관리)'}</small></span>
-          <input class="range" type="range" id="ex-try-n" min="0" max="15" step="1">
+          <input class="range" type="range" id="ex-try-n" min="0" max="15" step="1" autocomplete="off">
           <output class="ctl-out" id="ex-try-n-out" for="ex-try-n"></output></label>
         <div class="ex-try-out">
           <div class="readout" id="ex-try-ro"><span class="readout-label">연간 순감축</span>
@@ -426,20 +426,26 @@ function start(OL) {
     const hov = svgEl.querySelector('#ex-hov');
     if (!a) {
       hov.setAttribute('d', '');
+      hov._id = null;
       tip.hidden = true;
       svgEl.classList.remove('is-hot');
       return;
     }
+    const r = box.getBoundingClientRect();   // 읽기를 먼저 모아요
     const g = G.get(a.id);
-    hov.setAttribute('d', g.d);
-    hov.setAttribute('stroke-width', f1(width(a) + 3));
-    hov.setAttribute('class', `ex-hov ${a.seoul ? 's' : 'g'}`);
+    if (hov._id !== a.id) {
+      hov._id = a.id;
+      hov.setAttribute('d', g.d);
+      hov.setAttribute('stroke-width', f1(width(a) + 3));
+      hov.setAttribute('class', `ex-hov ${a.seoul ? 's' : 'g'}`);
+      tip.innerHTML = `<b>${esc(axisName(a.key))}</b> · PCTR ${a.PCTR.toFixed(2)} · ${esc(a.diag)}${a.alloc_am ? ` · ${a.alloc_am}회` : ''}`;
+      tip.hidden = false;
+      tip._w = tip.offsetWidth;   // 내용이 바뀔 때만 폭을 재요
+    }
     svgEl.classList.add('is-hot');
-    tip.innerHTML = `<b>${esc(axisName(a.key))}</b> · PCTR ${a.PCTR.toFixed(2)} · ${esc(a.diag)}${a.alloc_am ? ` · ${a.alloc_am}회` : ''}`;
     tip.hidden = false;
-    const r = box.getBoundingClientRect();
     const x = clientX - r.left, y = clientY - r.top;
-    const tw = tip.offsetWidth;
+    const tw = tip._w;
     tip.style.left = Math.max(0, Math.min(r.width - tw, x - tw / 2)) + 'px';
     tip.style.top = Math.max(0, y - 40) + 'px';
   }
@@ -480,11 +486,20 @@ function start(OL) {
       el.focus({ preventScroll: true });
       mapEl.classList.remove('kbd');
     });
+    // 마우스가 움직일 때마다 바로 읽고 쓰지 않고, 한 프레임에 한 번만 계산·표시해요(읽기·쓰기 교차 방지)
+    let hovRaf = 0, hovXY = null;
     svgEl.addEventListener('pointermove', (e) => {
       if (e.pointerType !== 'mouse') return;
-      showHover(nearest(e.clientX, e.clientY, false), e.clientX, e.clientY);
+      hovXY = [e.clientX, e.clientY];
+      if (hovRaf) return;
+      hovRaf = requestAnimationFrame(() => {
+        hovRaf = 0;
+        if (!hovXY) return;
+        const [x, y] = hovXY;
+        showHover(nearest(x, y, false), x, y);
+      });
     });
-    svgEl.addEventListener('pointerleave', () => showHover(null));
+    svgEl.addEventListener('pointerleave', () => { hovXY = null; cancelAnimationFrame(hovRaf); hovRaf = 0; showHover(null); });
   }
 
   function buildMap() {

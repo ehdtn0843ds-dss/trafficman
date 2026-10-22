@@ -18,6 +18,7 @@ function hero() {
   const nOut = document.getElementById('nOut');
   const phiOut = document.getElementById('phiOut');
   const verdict = document.getElementById('verdict');
+  const live = document.getElementById('verdict-live');   // 스크린리더에는 판정 한 문장만, 멈춘 뒤 읽어요
   const dest = document.getElementById('bus-dest');
   const note = document.getElementById('bus-note');
   const mark = document.getElementById('be-mark');
@@ -29,6 +30,7 @@ function hero() {
   let be = null;          // breakeven.js 모듈 (모형을 받은 뒤)
   let animating = false;
   let pending = false;    // 연출 중에 들어온 입력
+  let liveT = 0, firstRender = true;
 
   const fmt1 = (v) => v.toFixed(1);
   const setFill = (input) => {
@@ -36,6 +38,9 @@ function hero() {
     input.style.setProperty('--fill', p + '%');
   };
   setFill(nIn); setFill(phiIn);
+  // 뒤로 가기로 돌아와 브라우저가 슬라이더 값을 되살려도 출력이 어긋나지 않게, 실제 값으로 맞춰 둬요.
+  nOut.textContent = +nIn.value + '명';
+  phiOut.textContent = (+phiIn.value).toFixed(2);
 
   function render() {
     if (!be) return;
@@ -78,8 +83,8 @@ function hero() {
     let kg = '';
     if (N > 0) {
       kg = Math.abs(netKg) < 0.5
-        ? ` ${be.AXIS_KM} km 축 기준 출근 1회(회송 포함)마다 거의 본전이에요.`
-        : ` ${be.AXIS_KM} km 축 기준 출근 1회(회송 포함)마다 약 ${Math.abs(netKg).toFixed(0)} kg CO₂가 ${netKg >= 0 ? '줄어요' : '늘어요'}.`;
+        ? ` ${be.AXIS_KM}\u00A0km 축 기준 출근 1회(회송 포함)마다 거의 본전이에요.`
+        : ` ${be.AXIS_KM}\u00A0km 축 기준 출근 1회(회송 포함)마다 약 ${Math.abs(netKg).toFixed(0)}\u00A0kg\u00A0CO₂가 ${netKg >= 0 ? '줄어요' : '늘어요'}.`;
     }
     const lead = N > 0
       ? `이 탑승 인원에서 본전은 승용차 출신 <b>${fmt1(mStar)}명</b>이에요.${kg}`
@@ -88,7 +93,14 @@ function hero() {
       `<strong class="verdict-head">${head}</strong>` +
       `<div class="meter${ok ? ' is-cut' : ''}" style="--v:${v}%;--t:${t}%" aria-hidden="true"><i></i><b></b></div>` +
       `<p class="verdict-text">${lead}` +
-      `<small>보고서와 같은 모형이에요. 유니버스 디젤 3.49 km/L, 회송 1회, 승용차 재차 1.1명.</small></p>`;
+      `<small>보고서와 같은 모형이에요. 유니버스 디젤 3.49\u00A0km/L, 회송 1회, 승용차 재차 1.1명.</small></p>`;
+    // 판정 상자 전체 대신 한 문장만, 입력이 멈춘 뒤 읽어요(처음 그릴 때는 읽지 않아요)
+    if (live && !firstRender) {
+      clearTimeout(liveT);
+      const sr = N > 0 ? `${head}. 본전은 승용차 출신 ${fmt1(mStar)}명이에요.` : `${head}.`;
+      liveT = setTimeout(() => { live.textContent = sr; }, 800);
+    }
+    firstRender = false;
 
     let matched = null;
     chips.forEach((b) => {
@@ -116,7 +128,7 @@ function hero() {
   const slow = setTimeout(() => {
     if (be || !note) return;
     note.hidden = false;
-    note.textContent = '계산 모형을 불러오는 중이에요. 그동안은 기본값(약 20명, φ 0.25, 본전 10.9명)을 보여 드려요.';
+    note.textContent = '계산 모형 불러오는 중… 그동안은 기본값(약 20명, φ 0.25, 본전 10.9명)을 보여 드려요.';
   }, 1500);
   import('./breakeven.js')
     .then(async (mod) => { await mod.ready; return mod; })
@@ -126,7 +138,8 @@ function hero() {
       if (note) note.hidden = true;
       bus.classList.remove('is-loading');
       setEnabled(true);
-      render();
+      render();   // 모형을 받으면 지금 입력값(되살아난 값 포함)으로 다시 그려요
+      window.addEventListener('pageshow', (e) => { if (e.persisted) render(); });
     })
     .catch(() => {
       clearTimeout(slow);
@@ -157,7 +170,8 @@ function hero() {
     // 연출 중에 손을 대면 바로 끝내요.
     const cut = () => { if (animating) { timers.forEach(clearTimeout); finish(); } };
     const timers = [];
-    controls.forEach((c) => c.addEventListener('pointerdown', cut, { once: true }));
+    // 누르기뿐 아니라 키보드 조작·값 바꾸기에도 바로 끝내요
+    controls.forEach((c) => ['pointerdown', 'keydown', 'input'].forEach((ev) => c.addEventListener(ev, cut, { once: true })));
     for (let i = 0; i < boardN; i++) timers.push(setTimeout(() => order[i].classList.add('boarded'), i * STEP));
     timers.push(setTimeout(() => plan.classList.add('show-need'), boardN * STEP + 120));
     timers.push(setTimeout(finish, boardN * STEP + 520));

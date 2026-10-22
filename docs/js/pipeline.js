@@ -188,7 +188,8 @@ function thrControl() {
   };
   inp.addEventListener('input', update);
   reset?.addEventListener('click', () => { inp.value = '1.5'; update(); inp.focus(); });
-  setFill();
+  // 뒤로 가기 등으로 브라우저가 슬라이더 값을 되살린 경우에도 출력·분류·그림이 그 값과 맞게 한 번 그려요
+  update();
 }
 
 /* ------------------------------------------------------------------ */
@@ -252,9 +253,9 @@ function vizBreakeven() {
   const el = $('#viz-breakeven');
   if (!el) return;
   if (!beMod) {
-    el.innerHTML = '<p class="viz-wait">계산 모형을 불러오는 중이에요.</p>';
+    el.innerHTML = '<p class="viz-wait" role="status">계산 모형 불러오는 중…</p>';
     loadBreakeven().then(() => { drawnAt['step-7'] = null; drawPanel($('#step-7')); })
-      .catch(() => { el.innerHTML = '<p class="viz-wait is-error">계산 모형(model.json)을 불러오지 못해 곡선을 그리지 못했어요. 새로고침해 보세요. 기준값은 φ 1.0에서 10.7명, φ 0.5에서 21.9명, φ 0.25에서 45.3명이에요.</p>'; });
+      .catch(() => { el.innerHTML = '<p class="viz-wait is-error" role="status">계산 모형(model.json)을 불러오지 못해 곡선을 그리지 못했어요. 새로고침해 보세요. 기준값은 φ 1.0에서 10.7명, φ 0.5에서 21.9명, φ 0.25에서 45.3명이에요.</p>'; });
     return;
   }
   const breakeven = beMod.breakeven;
@@ -350,7 +351,7 @@ function vizAlloc() {
     field.replaceChildren(...secs);
     return colorOf;
   }
-  let mode = null;
+  let mode = null, flipT = 0;
   function setMode(next, animate) {
     if (next === mode) return;
     mode = next;
@@ -359,17 +360,20 @@ function vizAlloc() {
     if (first) {
       cells.forEach((c, i) => {
         const l = c.getBoundingClientRect();
+        c.style.willChange = 'transform';   // 움직이는 동안에만 합성 레이어로 올려요
         c.style.transition = 'none';
         c.style.transform = `translate(${first[i].left - l.left}px,${first[i].top - l.top}px)`;
       });
       void field.offsetWidth;
       cells.forEach((c, i) => {
         const d = i * 9;
-        c.style.transition = `transform .6s cubic-bezier(.3,.7,.2,1) ${d}ms, background-color .45s ease ${d}ms, border-color .45s ease ${d}ms`;
+        c.style.transition = `transform .6s var(--ease-out) ${d}ms, background-color .45s ease ${d}ms, border-color .45s ease ${d}ms`;
         c.style.transform = '';
         c.className = colorOf(i);
       });
-    } else cells.forEach((c, i) => { c.style.transition = ''; c.style.transform = ''; c.className = colorOf(i); });
+      clearTimeout(flipT);
+      flipT = setTimeout(() => cells.forEach((c) => { c.style.willChange = ''; }), 600 + 50 * 9 + 100);
+    } else cells.forEach((c, i) => { c.style.transition = ''; c.style.transform = ''; c.style.willChange = ''; c.className = colorOf(i); });
     const R = READ[next];
     ro.className = `readout ${R.cls}`;
     $('.v', ro).textContent = R.v;
@@ -421,19 +425,24 @@ function stepper() {
   const tabs = [...nav.querySelectorAll('[role=tab]')];
   const panels = tabs.map((t) => document.getElementById(t.getAttribute('aria-controls')));
   const done = $('#route-done'), bus = $('#route-bus'), track = $('.route-track', nav);
-  const prev = $('#step-prev'), next = $('#step-next');
+  const prev = $('#step-prev'), next = $('#step-next'), go = $('#step-go');
   let cur = 0;
+  // 지금 단계를 주소에 남겨요(#how-4). 섹션 앵커 #how와 겹치지 않게 '-숫자'만 읽어요.
+  const HASH = /^#how-([1-9])$/;
+  const stepFromHash = () => { const m = HASH.exec(location.hash); return m && +m[1] <= tabs.length ? +m[1] - 1 : null; };
 
   const placeBus = () => {
     const tr = track.getBoundingClientRect();
     const dot = tabs[cur].querySelector('.stop-dot').getBoundingClientRect();
     const cx = dot.left + dot.width / 2 - tr.left;
     bus.style.setProperty('--bx', cx + 'px');
-    done.style.width = Math.max(0, cx) + 'px';
+    // 지나온 구간은 폭 대신 scaleX로 늘려요(레이아웃을 다시 계산하지 않게)
+    done.style.setProperty('--done', tr.width ? Math.max(0, Math.min(1, cx / tr.width)).toFixed(4) : '0');
   };
 
-  function select(i, { focus = false, scroll = false } = {}) {
+  function select(i, { focus = false, scroll = false, hash = true } = {}) {
     cur = Math.max(0, Math.min(tabs.length - 1, i));
+    const last = cur === tabs.length - 1;
     tabs.forEach((t, k) => {
       const on = k === cur;
       t.setAttribute('aria-selected', on ? 'true' : 'false');
@@ -442,7 +451,17 @@ function stepper() {
       panels[k].hidden = !on;
     });
     prev.disabled = cur === 0;
-    next.textContent = cur === tabs.length - 1 ? '직접 계산해 보기' : '다음 단계';
+    // 마지막 단계에서는 '다음 단계' 버튼 대신 시뮬레이터로 가는 링크를 보여요
+    if (go) {
+      const hadFocus = document.activeElement === next;
+      next.hidden = last; go.hidden = !last;
+      if (last && hadFocus) go.focus({ preventScroll: true });
+      if (!last && document.activeElement === go) next.focus({ preventScroll: true });
+    } else next.textContent = last ? '직접 계산해 보기' : '다음 단계';
+    if (hash && history.replaceState) {
+      const h = '#how-' + (cur + 1);
+      if (location.hash !== h) history.replaceState(null, '', h);
+    }
     placeBus();
     drawPanel(panels[cur]);
     if (focus) tabs[cur].focus();
@@ -470,13 +489,17 @@ function stepper() {
   });
   let rz;
   window.addEventListener('beforeprint', () => panels.forEach(p => { p.hidden = false; try { drawPanel(p); } catch (e) {} }));
+  window.addEventListener('hashchange', () => { const k = stepFromHash(); if (k != null && k !== cur) select(k, { hash: false }); });
   window.addEventListener('resize', () => { placeBus(); clearTimeout(rz); rz = setTimeout(() => drawPanel(panels[cur]), 150); });
   document.fonts?.ready.then(placeBus);
-  select(0);
+  const k0 = stepFromHash();
+  select(k0 ?? 0, { hash: false });
+  // #how-4로 들어오면 그 단계를 연 채로 '만든 과정' 섹션으로 가요(그 id의 요소가 없어 브라우저가 스스로 스크롤하지 않아요)
+  if (k0 != null) requestAnimationFrame(() => document.getElementById('how')?.scrollIntoView({ behavior: 'instant', block: 'start' }));
 }
 
 // HTML로 그리는 그림은 한 번만, SVG 그림은 보일 때 그 폭에 맞춰 그려요.
-vizAxes(); vizDiag(); vizAlloc(); thrControl();
+vizAxes(); vizDiag(); vizAlloc();
 const SVG_VIZ = { 'step-2': [vizOrigin, '#viz-origin'], 'step-3': [vizTimes, '#viz-times'], 'step-4': [vizPctr, '#viz-pctr'],
   'step-5': [vizLogit, '#viz-logit'], 'step-7': [vizBreakeven, '#viz-breakeven'], 'step-9': [vizMC, '#viz-mc'] };
 const drawnAt = {};
@@ -489,6 +512,7 @@ function drawPanel(panel) {
   drawnAt[panel.id] = w;
   v[0]();
 }
+thrControl();   // drawPanel·drawnAt 선언 뒤에 불러요(되살린 슬라이더 값으로 한 번 그려요)
 stepper();
 // JS가 없을 때처럼 모든 단계가 펼쳐진 인쇄 등에서도 그림이 비지 않게, 숨은 단계는 처음 열 때 그려요.
 

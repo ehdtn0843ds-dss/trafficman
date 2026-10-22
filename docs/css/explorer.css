@@ -1,6 +1,6 @@
 /* 축 지도 탐색기 (#explorer-root) — site.css 토큰만 써요 */
 
-.ex{display:grid;gap:var(--s4);--cut-ink:#0E6B4B;--add-ink:#A52A20}
+.ex{display:grid;gap:var(--s4)}
 .ex .pos{color:var(--cut-ink)} .ex .neg{color:var(--add-ink)}
 .ex small{font-size:max(12px,.85em)}
 .ex-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s3) var(--s5)}
@@ -36,7 +36,7 @@
 .ex-map .scalebar{stroke:var(--muted);stroke-width:1.5}
 .ex-map .scale-t{font-size:12px;fill:var(--muted)}
 .ex-axis{outline:none;pointer-events:none}
-.ex-axis .ln{fill:none;stroke-linecap:round;opacity:.42;transition:opacity .2s}
+.ex-axis .ln{fill:none;stroke-linecap:round;opacity:.42;transition:opacity .2s var(--ease-out)}
 .ex-axis.is-alloc .ln{opacity:.95}
 .ex-axis.g .ln{stroke:var(--car)}
 .ex-axis.s .ln{stroke:var(--seoul)}
@@ -70,11 +70,13 @@
 .ex-strip-name{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--asphalt);font-size:var(--fs-sm)}
 .ex-strip-name i{width:10px;height:10px;border-radius:50%;background:var(--c)}
 .ex-strip-go{margin-left:auto}
-.ex-chips{gap:6px;overflow-x:auto;overscroll-behavior-x:contain;padding:8px 2px 6px;margin-top:4px;scrollbar-width:thin}
+.ex-chips{gap:6px;overflow-x:auto;overscroll-behavior-x:contain;padding:8px 2px 6px;margin-top:4px;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
 .ex-chip{flex:none;font:inherit;font-size:var(--fs-xs);line-height:1.3;display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line-strong);background:var(--paper);color:var(--asphalt);border-radius:var(--r-pill);padding:6px 11px;cursor:pointer;white-space:nowrap;min-height:34px}
 .ex-chip i{width:9px;height:9px;border-radius:50%;background:var(--c)}
 .ex-chip b{font-weight:700;font-size:12px}
+.ex-chip:hover{border-color:var(--asphalt)}
 .ex-chip[aria-pressed=true]{background:var(--asphalt);border-color:var(--asphalt);color:#fff}
+.ex-chip[aria-pressed=true]:hover{background:var(--asphalt-2)}
 .ex-detail:focus{outline:none}
 .ex-detail:focus-visible{outline:var(--focus,3px solid #1D3B66);outline-offset:2px}
 

@@ -32,7 +32,7 @@ if (root) {
   loadModel(MODEL_URL).then(start).catch((e) => {
     // 안내문만 보여요(콘솔 오류는 남기지 않아요)
     const el = root.querySelector('.mount-empty');
-    if (el) el.textContent = '계산 모듈을 불러오지 못했어요. 페이지를 새로 고쳐 주세요.';
+    if (el) { el.setAttribute('role', 'status'); el.textContent = '계산 모듈을 불러오지 못했어요. 페이지를 새로 고쳐 주세요.'; }
     void e;
   });
 }
@@ -53,11 +53,11 @@ function start() {
 
   const PRESETS = [
     { id: 'base', group: 'report', label: '보고서 기준값', mp: 'model', mb: 'model', common: false, Np: 44, phip: 0.5, Nb: 19.5, phib: 0.25, ...PHYS0,
-      note: `<b>보고서 기준값</b>이에요(보고서 본문의 +1,020 / −793 ${UNIT}). PCTR 축은 모형 수요(회당 44명·φ 0.5), 현행 노선은 노선마다 다른 모형 수요로 계산해요.` },
+      note: `<b>보고서 기준값</b>이에요(보고서 본문의 +1,020 / <span class="nw">−793&nbsp;${UNIT}</span>). PCTR 축은 모형 수요(회당 44명·φ 0.5), 현행 노선은 노선마다 다른 모형 수요로 계산해요.` },
     { id: 'same', group: 'report', label: '표4처럼 같은 조건', mp: 'direct', mb: 'direct', common: true, Np: 44, phip: 0.5, Nb: 44, phib: 0.5, ...PHYS0,
       note: '<b>보고서 표4</b>의 균일 가정이에요. 두 방식에 똑같이 회당 44명·φ 0.5를 줬어요.' },
     { id: 'uni', group: 'page', label: '현행 전 노선 균일 19.5명', mp: 'model', mb: 'direct', common: false, Np: 44, phip: 0.5, Nb: 19.5, phib: 0.25, ...PHYS0,
-      note: `<b>보고서에 없는, 이 페이지에서 계산한 값</b>이에요. 현행 28개 노선 모두에 회당 19.5명·φ 0.25를 똑같이 줬어요. 노선마다 수요가 다른 보고서 기준값(−793)과 달리 −768 ${UNIT}이 나와요. PCTR 쪽은 모형 수요 그대로예요.` },
+      note: `<b>보고서에 없는, 이 페이지에서 계산한 값</b>이에요. 현행 28개 노선 모두에 회당 19.5명·φ 0.25를 똑같이 줬어요. 노선마다 수요가 다른 보고서 기준값(−793)과 달리 <span class="nw">−768&nbsp;${UNIT}</span>이 나와요. PCTR 쪽은 모형 수요 그대로예요.` },
     { id: 'fcev', group: 'page', label: '수소버스 전환', mp: 'model', mb: 'model', common: false, Np: 44, phip: 0.5, Nb: 19.5, phib: 0.25, ...PHYS0, vehicle: 'fcev',
       note: '<b>보고서에 없는, 이 페이지에서 계산한 값</b>이에요. 차량을 유니버스 수소전기버스(승객 44석, 28.0 km/kg, 개질 수소 9.2 kgCO₂/kg)로 바꾸고 모형 수요로 다시 계산했어요. 보고서는 수소버스의 본전(φ 0.25에서 23.3명)까지만 다뤄요. 수소 배출계수를 0(부생수소)까지 내려 볼 수 있어요.' },
     { id: 'pess', group: 'page', label: '비관 조합', snap: true, mp: 'model', mb: 'model', common: false, Np: 44, phip: 0.5, Nb: 19.5, phib: 0.25, ...PHYS0, occ: 1.3,
@@ -79,7 +79,7 @@ function start() {
 
   const ctl = (id, label, sub, cls = '') => `
     <label class="ctl sim-ctl" data-ctl="${id}"><span class="ctl-label">${label}${sub ? `<small>${sub}</small>` : ''}</span>
-      <input class="range ${cls}" type="range" id="sim-${id}" min="${RANGES[id].min}" max="${RANGES[id].max}" step="${RANGES[id].step}">
+      <input class="range ${cls}" type="range" id="sim-${id}" min="${RANGES[id].min}" max="${RANGES[id].max}" step="${RANGES[id].step}" autocomplete="off">
       <output class="ctl-out" id="sim-${id}-out" for="sim-${id}"></output></label>`;
 
   // 2만 번 흔들어 보기: 보고서 히스토그램 칸(-1,400~+1,700, 60칸)을 그대로 써요
@@ -172,7 +172,7 @@ function start() {
         </div>
         <div class="sim-group" role="group" aria-labelledby="sim-g1">
           <div class="sim-group-head"><h3 id="sim-g1">탑승과 승용차 출신 비율</h3>
-            <label class="switch"><input type="checkbox" id="sim-common"><span>두 방식에 같은 값</span></label></div>
+            <label class="switch"><input type="checkbox" id="sim-common" autocomplete="off"><span>두 방식에 같은 값</span></label></div>
           <p class="sim-hint" id="sim-hint-n"></p>
           <p class="sim-who-line sim-who-line--pctr" id="sim-wl-p"><i></i><span>PCTR 기준</span></p>
           ${ctl('Np', '회당 탑승', '출근 1회 평균, 명')}
@@ -276,7 +276,7 @@ function start() {
     <span class="d-sep">·</span>
     <span><small>현행</small> <b class="d-b" id="sim-dock-b"></b></span>
     <small class="d-unit">${UNIT}</small>
-    <button type="button" tabindex="-1" id="sim-dock-go">결과판</button>
+    <button type="button" tabindex="-1" id="sim-dock-go" aria-label="결과판으로 이동">결과판</button>
   </div>`;
 
   const $ = (s) => root.querySelector(s);
@@ -447,16 +447,17 @@ function start() {
     // 판정
     const d = ot - bt, ad = int(Math.abs(d));
     let head, cls;
-    if (res.snap) { head = `PCTR 기준은 버스를 넣지 않고(0), 현행 방식은 ${int(-bt)} ${UNIT} 늘려요`; cls = 'is-even'; }
+    const U = '\u00A0' + UNIT;   // 숫자와 단위가 줄바꿈으로 갈라지지 않게
+    if (res.snap) { head = `PCTR 기준은 버스를 넣지 않고(0), 현행 방식은 ${int(-bt)}${U} 늘려요`; cls = 'is-even'; }
     else if (Math.abs(d) < 5) { head = '두 방식의 결과가 거의 같아요'; cls = 'is-even'; }
     else if (d > 0) {
-      if (ot >= 0.5 && bt <= -0.5) head = `PCTR 기준은 줄이고 현행 방식은 늘려요. 차이는 ${ad} ${UNIT}이에요`;
-      else if (ot < 0.5) head = `두 방식 모두 탄소가 늘지만, PCTR 기준이 ${ad} ${UNIT} 덜 늘어요`;
-      else head = `이 조건에서는 PCTR 기준이 ${ad} ${UNIT} 더 줄여요`;
+      if (ot >= 0.5 && bt <= -0.5) head = `PCTR 기준은 줄이고 현행 방식은 늘려요. 차이는 ${ad}${U}이에요`;
+      else if (ot < 0.5) head = `두 방식 모두 탄소가 늘지만, PCTR 기준이 ${ad}${U} 덜 늘어요`;
+      else head = `이 조건에서는 PCTR 기준이 ${ad}${U} 더 줄여요`;
       cls = ot >= 0.5 ? 'is-cut' : 'is-add';
     } else {
-      if (bt < 0.5) head = `두 방식 모두 탄소가 늘고, 현행 방식이 ${ad} ${UNIT} 덜 늘어요`;
-      else head = `이 조건에서는 현행 방식이 ${ad} ${UNIT} 더 줄여요`;
+      if (bt < 0.5) head = `두 방식 모두 탄소가 늘고, 현행 방식이 ${ad}${U} 덜 늘어요`;
+      else head = `이 조건에서는 현행 방식이 ${ad}${U} 더 줄여요`;
       cls = bt >= 0.5 ? 'is-even' : 'is-add';
     }
     const h = $('#sim-head');
@@ -477,7 +478,7 @@ function start() {
     let why;
     if (res.snap) why = '비관 조합에서는 PCTR 축도 회당 승용차 출신이 본전에 못 미쳐 그리디 배분이 한 회차도 고르지 않았어요. 현행 방식은 배분 규칙상 그대로 100회를 넣어요.';
     else if (zeroBus) why = `수소 생산 배출을 0으로 두면(부생수소 등 생산 배출 0 가정) 버스 쪽 배출이 없어서, 승용차 출신이 한 명만 타도 탄소가 줄어요.${po && pbb ? ` 회당 승용차 출신은 PCTR 기준 ${x1(po.m)}명, 현행 방식 ${x1(pbb.m)}명이에요.` : ''}`;
-    else if (S.mp === 'direct' && S.mb === 'direct' && S.common) why = '탑승과 φ가 같으면 축 길이 차이만 남아요. 현행 노선이 평균 39.2 km로 PCTR 축(29.3 km)보다 길어서 절댓값이 더 커요. PCTR 기준이 유리하다는 결론은 고PCTR 축에 승용차 출신이 더 많이 탄다는 가설에 달려 있어요.';
+    else if (S.mp === 'direct' && S.mb === 'direct' && S.common) why = '탑승과 φ가 같으면 축 길이 차이만 남아요. 현행 노선이 평균 39.2\u00A0km로 PCTR 축(29.3\u00A0km)보다 길어서 절댓값이 더 커요. PCTR 기준이 유리하다는 결론은 고PCTR 축에 승용차 출신이 더 많이 탄다는 가설에 달려 있어요.';
     else if (po && pbb) {
       const lead = (x) => (x.m >= x.mstar ? '본전을 넘어요' : '본전에 못 미쳐요');
       why = `회당 승용차 출신이 PCTR 기준 ${x1(po.m)}명(본전 ${x1(po.mstar)}명)으로 ${lead(po)}. 현행 방식은 ${x1(pbb.m)}명(본전 ${x1(pbb.mstar)}명)으로 ${lead(pbb)}.`;
@@ -651,8 +652,35 @@ function start() {
   // 결과판을 위로 지나친 뒤(결과판 아래쪽이 헤더 밑으로 들어간 뒤), 시뮬레이터 안에 있을 때만 보여요
   const nextSec = document.getElementById('explorer');
   const headH = () => Math.round(document.querySelector('.sign')?.getBoundingClientRect().height || 52);
-  let boardPassed = false, simVisible = false, nextVisible = false;
-  const syncDock = () => dock.classList.toggle('is-on', boardPassed && simVisible && !nextVisible);
+  let boardPassed = false, simVisible = false, nextVisible = false, focusHide = false;
+  // 띠가 떠 있을 때는 html에 표시를 달아 scroll-padding-bottom을 줘요(키보드로 옮겨 간 요소가 띠 밑으로 들어가지 않게).
+  // 그래도 포커스 요소가 띠 자리와 겹치면 띠를 잠시 숨겨요.
+  const syncDock = () => {
+    const on = boardPassed && simVisible && !nextVisible;
+    document.documentElement.classList.toggle('sim-dock-on', on);
+    dock.classList.toggle('is-on', on && !focusHide);
+  };
+  const DOCK_ZONE = () => dock.offsetHeight + 12 + 8;   // 띠 높이 + 바닥 여백 + 숨 쉴 틈
+  const checkFocus = () => {
+    const a = document.activeElement;
+    const was = focusHide;
+    if (!a || a === document.body || dock.contains(a)) focusHide = false;
+    else {
+      // 키보드로 옮겨 간 포커스(:focus-visible)만 따져요. 마우스로 누른 버튼 때문에 띠가 사라지지 않게
+      let kb = true;
+      try { kb = a.matches(':focus-visible'); } catch (e) { /* 지원하지 않는 브라우저는 그대로 따져요 */ }
+      const r = a.getBoundingClientRect();
+      focusHide = kb && r.height > 0 && r.bottom > innerHeight - DOCK_ZONE() && r.top < innerHeight;
+    }
+    if (was !== focusHide) syncDock();
+  };
+  document.addEventListener('focusin', () => requestAnimationFrame(checkFocus));
+  document.addEventListener('focusout', (e) => { if (!e.relatedTarget) { focusHide = false; syncDock(); } });
+  // 마우스·손가락으로 다시 만지거나 스크롤하면 원래 규칙대로 돌아가요
+  document.addEventListener('pointerdown', () => { if (focusHide) { focusHide = false; syncDock(); } }, { passive: true });
+  let scrT = 0;
+  window.addEventListener('scroll', () => { if (!focusHide) return; clearTimeout(scrT); scrT = setTimeout(checkFocus, 120); }, { passive: true });
+  window.addEventListener('scrollend', () => { if (focusHide) checkFocus(); });
   if ('IntersectionObserver' in window) {
     const rm = `-${headH()}px 0px 0px 0px`;
     new IntersectionObserver(([e]) => {
@@ -678,7 +706,8 @@ function start() {
       const n = st.n || 1;
       for (const who of ['pctr', 'base']) {
         const cnt = st.h[who];
-        bars[who].forEach((el, i) => { el.style.height = Math.min(100, (cnt[i] / n / yMax) * 100) + '%'; });
+        // 높이 대신 scaleY로 키워요(레이아웃을 다시 계산하지 않게)
+        bars[who].forEach((el, i) => { el.style.transform = `scaleY(${Math.min(1, cnt[i] / n / yMax).toFixed(4)})`; });
       }
       for (const s of MCSTATS) {
         const v = st.n ? st[s.key] / st.n : null;

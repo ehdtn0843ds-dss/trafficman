@@ -24,6 +24,9 @@
 | `--fs-xs`~`--fs-2xl`, `--fs-num` | 13 / 14.5 / 17 / 20 / 26 / 28~36 / 34~56 px | 글자 크기 단계 |
 | `--s1`~`--s8` | 4 / 8 / 12 / 16 / 24 / 32 / 48 / 72 px | 간격 |
 | `--r-ctl` `--r-panel` `--r-pill` | 4px / 6px / 999px | 입력 상자 / 패널 / 버튼 |
+| `--add-ink` | #A52A20 | 순증가를 작은 글자로 쓸 때 (시뮬레이터·탐색기도 이 값 하나만 써요) |
+| `--warn-tint` `--warn-tint-2` `--warn-line` `--warn-ink` `--warn-ink-2` | #FFF1C9 / #FFF6DC / #8A6100 / #5C4100 / #4A3500 | 주의 표시(비관 조합 잠금, 섞인 계산 방식 배지) |
+| `--ease-out` | cubic-bezier(.16,1,.3,1) | 주요 전환(정류장 버스, 요약 띠, 배분 이동, 막대)의 이징 |
 
 색 의미는 페이지 전체에서 고정이에요. **PCTR 기준·경기 내부 축은 주황, 현행 방식·서울행은 파랑, 감축은 초록, 증가는 빨강, 진단의 '출퇴근 직행'(단지 정차 직행)은 검정(`--asphalt`).** 보고서 그림5·7은 이 규칙과 반대로 칠해져 있어서 본문에는 넣지 않고 바닥글 썸네일로만 링크해요.
 - 6단계 진단 열의 머리 선은 수요관리만 파랑이고 DRT 연계는 중립 회색(`--line-strong`)이에요. 주황 칠은 '증편이 배분된 축' 칸에만 써요.
@@ -83,7 +86,7 @@
   </div>
 </div>
 ```
-`is-cut` / `is-add`로 부호 색, 작은 크기는 `.readout--sm`. 판정 문장은 `.verdict-head` + `.verdict-text`(히어로와 같은 모양).
+`is-cut` / `is-add`로 부호 색, 작은 크기는 `.readout--sm`. 판정 문장은 `.verdict-head` + `.verdict-text`(히어로와 같은 모양). `.verdict-head`는 문장이라 본문 서체(IBM Plex Sans KR 700, 20px)로 써요. 디스플레이 서체는 h1·h2·결과 숫자만이에요.
 
 **기준선 막대**: `<div class="meter" style="--v:23%;--t:25%"><i></i><b></b></div>` (`--v` 값, `--t` 기준선, 통과하면 `.is-cut`).
 
@@ -99,7 +102,8 @@
 
 ## 원칙
 
-- 모션은 사용자가 움직였을 때만 써요. 스스로 움직이는 건 히어로 탑승 연출(처음 한 번, 약 1초), 파이프라인 1단계(532→20), 정류장 버스뿐이에요. 8단계 배분 이동(FLIP)과 4단계 기준선은 사용자가 조작할 때만 움직여요. `prefers-reduced-motion`이면 전부 멈춰요.
+- 모션은 사용자가 움직였을 때만 써요. 스스로 움직이는 건 히어로 탑승 연출(처음 한 번, 약 1초), 파이프라인 1단계(532→20), 정류장 버스뿐이에요. 8단계 배분 이동(FLIP)과 4단계 기준선은 사용자가 조작할 때만 움직여요. `prefers-reduced-motion`이면 전부 멈춰요. 움직이는 막대는 가능하면 폭 대신 `transform`(scaleX·scaleY)으로 바꾸고, `will-change`는 움직이는 동안에만 JS로 붙여요.
+- 강조 상자는 왼쪽 굵은 선 대신 위쪽 3px 선(히어로 `.strip`과 같은 문법)으로 그려요(`.caveat`, `.mc-stat`).
 - 포커스는 `outline:var(--focus); outline-offset:2px; box-shadow:var(--focus-ring)`(남색 3px + 흰 2px 띠)로 항상 보여요. 전역 `:focus-visible`에 이미 걸려 있으니, 따로 정할 때도 이 변수만 써 주세요(주황 `--car`를 포커스에 쓰지 않아요). 커스텀 컨트롤도 키보드로 다 조작되게 해 주세요.
 - 용어 풀이: `<span class="term-wrap"><button type="button" class="term" aria-describedby="tip-x">φ</button><span class="term-tip" role="tooltip" id="tip-x">…</span></span>`. 누르기·포커스·마우스 올리기로 열리고 Esc로 닫혀요(`js/hero.js`). 글자는 12px 미만으로 쓰지 않아요.
 - 문구는 해요체, 숫자는 저장소 결과 파일에 있는 것만 써요. 계산값은 `js/model.js`에서 받아요.
